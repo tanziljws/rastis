@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test File Upload - Sekolah Galeri API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test File Upload - Sekolah Galeri API</h1>
+        
+        <div class="form-group">
+            <label for="token">Bearer Token:</label>
+            <input type="text" id="token" placeholder="Enter your Bearer token here">
+        </div>
+        
+        <div class="form-group">
+            <label for="galery_id">Galery ID:</label>
+            <input type="number" id="galery_id" placeholder="Enter galery ID">
+        </div>
+        
+        <div class="form-group">
+            <label for="judul">Judul (Optional):</label>
+            <input type="text" id="judul" placeholder="Enter photo title">
+        </div>
+        
+        <div class="form-group">
+            <label for="file">Select Image File:</label>
+            <input type="file" id="file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp">
+        </div>
+        
+        <button onclick="uploadFile()">Upload Photo</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function uploadFile() {
+            const token = document.getElementById('token').value;
+            const galeryId = document.getElementById('galery_id').value;
+            const judul = document.getElementById('judul').value;
+            const fileInput = document.getElementById('file');
+            const resultDiv = document.getElementById('result');
+            
+            if (!token) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: Please enter a Bearer token';
+                return;
+            }
+            
+            if (!galeryId) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: Please enter a Galery ID';
+                return;
+            }
+            
+            if (!fileInput.files[0]) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: Please select a file';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: Invalid file type. Please select an image file (JPEG, PNG, GIF, WebP)';
+                return;
+            }
+            
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: File size too large. Maximum size is 5MB';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('galery_id', galeryId);
+            formData.append('file', file);
+            if (judul) {
+                formData.append('judul', judul);
+            }
+            
+            try {
+                resultDiv.className = 'result info';
+                resultDiv.textContent = 'Uploading...';
+                
+                const response = await fetch('/api/fotos', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `Upload successful!\n\nResponse:\n${JSON.stringify(result, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Upload failed!\n\nStatus: ${response.status}\nResponse:\n${JSON.stringify(result, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
