@@ -12,7 +12,7 @@
     
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -24,7 +24,7 @@
             overflow: hidden;
         }
         .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2563eb;
             color: white;
             padding: 40px;
             text-align: center;
@@ -38,11 +38,11 @@
             padding: 12px 15px;
         }
         .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
         }
         .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2563eb;
             border: none;
             border-radius: 10px;
             padding: 12px;
@@ -95,17 +95,32 @@
                             @csrf
                             
                             <div class="mb-3">
-                                <label for="username" class="form-label">
-                                    <i class="fas fa-user me-2"></i>Username
+                                <label for="name" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Nama atau Email
                                 </label>
                                 <input type="text" 
-                                       class="form-control @error('username') is-invalid @enderror" 
-                                       id="username" 
-                                       name="username" 
-                                       value="{{ old('username') }}" 
-                                       required 
+                                       class="form-control @error('name') is-invalid @enderror" 
+                                       id="name" 
+                                       name="name" 
+                                       value="{{ old('name') }}" 
+                                       placeholder="Masukkan nama atau email"
                                        autofocus>
-                                @error('username')
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope me-2"></i>Email (opsional jika sudah isi nama)
+                                </label>
+                                <input type="email" 
+                                       class="form-control @error('email') is-invalid @enderror" 
+                                       id="email" 
+                                       name="email" 
+                                       value="{{ old('email') }}" 
+                                       placeholder="Masukkan email (opsional)">
+                                @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -133,7 +148,7 @@
                         <div class="text-center mt-4">
                             <small class="text-muted">
                                 <i class="fas fa-info-circle me-1"></i>
-                                Default: admin / admin123
+                                Default: admin / admin123 atau admin@example.com / admin123
                             </small>
                         </div>
                     </div>
@@ -144,5 +159,34 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Make name/email fields work together
+        document.addEventListener('DOMContentLoaded', function() {
+            const nameField = document.getElementById('name');
+            const emailField = document.getElementById('email');
+            
+            function updateFieldRequirements() {
+                if (nameField.value.trim()) {
+                    emailField.removeAttribute('required');
+                    emailField.placeholder = 'Masukkan email (opsional)';
+                } else if (emailField.value.trim()) {
+                    nameField.removeAttribute('required');
+                    nameField.placeholder = 'Masukkan nama (opsional)';
+                } else {
+                    nameField.setAttribute('required', 'required');
+                    emailField.setAttribute('required', 'required');
+                    nameField.placeholder = 'Masukkan nama atau email';
+                    emailField.placeholder = 'Masukkan email';
+                }
+            }
+            
+            nameField.addEventListener('input', updateFieldRequirements);
+            emailField.addEventListener('input', updateFieldRequirements);
+            
+            // Initial check
+            updateFieldRequirements();
+        });
+    </script>
 </body>
 </html>

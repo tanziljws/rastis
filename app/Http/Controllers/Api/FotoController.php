@@ -48,7 +48,7 @@ class FotoController extends Controller
      * @authenticated
      * 
      * @bodyParam galery_id integer required ID galery. Example: 1
-     * @bodyParam file file required File gambar (jpeg,jpg,png,gif,webp, max 5MB). No-example
+     * @bodyParam file file required File gambar (jpeg,jpg,png,gif,webp). No-example
      * @bodyParam judul string nullable Judul foto. Example: Judul Foto
      * 
      * @response 201 scenario="Upload berhasil" {
@@ -95,24 +95,46 @@ class FotoController extends Controller
      *   }
      * }
      */
-    public function store(Request $request): FotoResource
+    public function store(Request $request): FotoResource|AnonymousResourceCollection
     {
-        $validated = $request->validate([
-            'galery_id' => 'required|exists:galery,id',
-            'file' => 'required|file|mimes:jpeg,jpg,png,gif,webp|max:5120', // 5MB max
-            'judul' => 'nullable|string|max:255',
-        ]);
+        $isMultiple = $request->hasFile('files');
 
-        // Handle file upload
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('foto', $fileName, 'public');
-            
-            $validated['file'] = $filePath;
+        $rules = [
+            'galery_id' => 'required|exists:galery,id',
+            'judul' => 'nullable|string|max:255',
+        ];
+        if ($isMultiple) {
+            $rules['files'] = 'required|array|min:1';
+            $rules['files.*'] = 'file|mimes:jpeg,jpg,png|max:2048';
+        } else {
+            $rules['file'] = 'required|file|mimes:jpeg,jpg,png|max:2048';
         }
 
-        $foto = Foto::create($validated);
+        $validated = $request->validate($rules);
+
+        $disk = 'public'; // Force using public disk for file storage
+        $created = [];
+
+        if ($isMultiple) {
+            foreach ($request->file('files') as $file) {
+                $path = $file->store('fotos', 'public');
+                $created[] = Foto::create([
+                    'galery_id' => $validated['galery_id'],
+                    'judul' => $validated['judul'] ?? null,
+                    'file' => $path, // Store full path as requested
+                ]);
+            }
+            return FotoResource::collection(collect($created)->load('galery'));
+        }
+
+        $file = $request->file('file');
+        $path = $file->store('fotos', 'public');
+
+        $foto = Foto::create([
+            'galery_id' => $validated['galery_id'],
+            'judul' => $validated['judul'] ?? null,
+            'file' => $path, // Store full path as requested
+        ]);
 
         return new FotoResource($foto->load('galery'));
     }
@@ -134,22 +156,22 @@ class FotoController extends Controller
     {
         $validated = $request->validate([
             'galery_id' => 'required|exists:galery,id',
-            'file' => 'nullable|file|mimes:jpeg,jpg,png,gif,webp|max:5120', // 5MB max
+            'file' => 'nullable|file|mimes:jpeg,jpg,png|max:2048',
             'judul' => 'nullable|string|max:255',
         ]);
 
         // Handle file upload if new file is provided
         if ($request->hasFile('file')) {
             // Delete old file if exists
-            if ($foto->file && Storage::disk('public')->exists($foto->file)) {
-                Storage::disk('public')->delete($foto->file);
+            $disk = 'public'; // Force using public disk for file storage
+            if ($foto->file && Storage::disk($disk)->exists($foto->file)) {
+                Storage::disk($disk)->delete($foto->file);
             }
             
             $file = $request->file('file');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('foto', $fileName, 'public');
+            $path = $file->store('fotos', 'public');
             
-            $validated['file'] = $filePath;
+            $validated['file'] = $path; // Store full path as requested
         }
 
         $foto->update($validated);
@@ -182,8 +204,9 @@ class FotoController extends Controller
     public function destroy(Foto $foto): Response
     {
         // Delete physical file if exists
-        if ($foto->file && Storage::disk('public')->exists($foto->file)) {
-            Storage::disk('public')->delete($foto->file);
+        $disk = 'public'; // Force using public disk for file storage
+        if ($foto->file && Storage::disk($disk)->exists($foto->file)) {
+            Storage::disk($disk)->delete($foto->file);
         }
 
         $foto->delete();

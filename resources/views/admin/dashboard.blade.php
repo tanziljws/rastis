@@ -2,11 +2,115 @@
 
 @section('title', 'Dashboard')
 
+@section('styles')
+<style>
+.hero-dashboard {
+    background: linear-gradient(rgba(51, 51, 255, 0.8), rgba(51, 51, 255, 0.9)), url('https://images.unsplash.com/photo-1562774053-701939374585?w=1200&q=80');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    margin: -20px -20px 30px -20px;
+    border-radius: 0 0 15px 15px;
+    position: relative;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+}
+
+.hero-content h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #ffcc00;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+}
+
+.school-logo-hero {
+    width: 60px;
+    height: 60px;
+    background: #ffcc00;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 24px;
+    color: #3333ff;
+    font-weight: bold;
+}
+</style>
+@endsection
+
 @section('content')
-<!-- Stats Cards -->
-<div class="row mb-4">
-    <div class="col-md-2 col-sm-6 mb-3">
+<!-- Hero Section -->
+<div class="hero-dashboard">
+    <div class="hero-content">
+        <div class="school-logo-hero">
+            <i class="fas fa-school"></i>
+        </div>
+        <h1>Selamat Datang di</h1>
+        <h2>SMKN 4 Kota Bogor</h2>
+        <p>Mencetak Generasi Unggul, Berkarakter, dan Siap Kerja</p>
+    </div>
+</div>
+
+<!-- Quick Stats Cards -->
+<div class="row mt-4">
+    <div class="col-md-3 col-sm-6 mb-3">
         <div class="card card-stats bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ $stats['total_fotos'] }}</h3>
+                        <p class="mb-0">Total Foto</p>
+                    </div>
+                    <div class="stats-icon bg-white bg-opacity-25">
+                        <i class="fas fa-images"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card card-stats bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ $stats['total_galeries'] }}</h3>
+                        <p class="mb-0">Galeri</p>
+                    </div>
+                    <div class="stats-icon bg-white bg-opacity-25">
+                        <i class="fas fa-folder"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card card-stats bg-info text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -21,39 +125,7 @@
         </div>
     </div>
     
-    <div class="col-md-2 col-sm-6 mb-3">
-        <div class="card card-stats bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h3 class="mb-0">{{ $stats['total_posts'] }}</h3>
-                        <p class="mb-0">Posts</p>
-                    </div>
-                    <div class="stats-icon bg-white bg-opacity-25">
-                        <i class="fas fa-newspaper"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-2 col-sm-6 mb-3">
-        <div class="card card-stats bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h3 class="mb-0">{{ $stats['total_galeries'] }}</h3>
-                        <p class="mb-0">Galeries</p>
-                    </div>
-                    <div class="stats-icon bg-white bg-opacity-25">
-                        <i class="fas fa-images"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-2 col-sm-6 mb-3">
+    <div class="col-md-3 col-sm-6 mb-3">
         <div class="card card-stats bg-warning text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -86,103 +158,6 @@
     </div>
 </div>
 
-<!-- Recent Posts & Photos -->
-<div class="row">
-    <!-- Recent Posts -->
-    <div class="col-lg-6 mb-4">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-newspaper me-2"></i>
-                    Posts Terbaru
-                </h5>
-            </div>
-            <div class="card-body">
-                @if($recentPosts->count() > 0)
-                    <div class="list-group list-group-flush">
-                        @foreach($recentPosts as $post)
-                            <div class="list-group-item border-0 px-0">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">{{ $post->judul }}</h6>
-                                        <p class="mb-1 text-muted small">
-                                            <i class="fas fa-tag me-1"></i>
-                                            {{ $post->kategori->judul ?? 'Tanpa Kategori' }}
-                                        </p>
-                                        <small class="text-muted">
-                                            <i class="fas fa-user me-1"></i>
-                                            {{ $post->petugas->username }}
-                                            <span class="mx-2">•</span>
-                                            <i class="fas fa-calendar me-1"></i>
-                                            {{ $post->created_at->format('d M Y') }}
-                                        </small>
-                                    </div>
-                                    <span class="badge bg-{{ $post->status === 'published' ? 'success' : ($post->status === 'draft' ? 'warning' : 'secondary') }}">
-                                        {{ ucfirst($post->status) }}
-                                    </span>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                    <div class="text-center mt-3">
-                        <a href="{{ route('admin.posts') }}" class="btn btn-outline-primary btn-sm">
-                            Lihat Semua Posts
-                        </a>
-                    </div>
-                @else
-                    <div class="text-center py-4">
-                        <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Belum ada posts</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-    
-    <!-- Recent Photos -->
-    <div class="col-lg-6 mb-4">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-camera me-2"></i>
-                    Foto Terbaru
-                </h5>
-            </div>
-            <div class="card-body">
-                @if($recentPhotos->count() > 0)
-                    <div class="row g-3">
-                        @foreach($recentPhotos as $photo)
-                            <div class="col-md-4">
-                                <div class="position-relative">
-                                    <img src="{{ asset('storage/' . $photo->file) }}" 
-                                         class="img-fluid rounded" 
-                                         alt="{{ $photo->judul ?? 'Foto' }}"
-                                         style="height: 100px; width: 100%; object-fit: cover;">
-                                    @if($photo->galery && $photo->galery->post)
-                                        <div class="position-absolute bottom-0 start-0 w-100 p-2" 
-                                             style="background: rgba(0,0,0,0.7); color: white; font-size: 0.75rem;">
-                                            {{ Str::limit($photo->galery->post->judul, 20) }}
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                    <div class="text-center mt-3">
-                        <a href="{{ route('admin.fotos') }}" class="btn btn-outline-primary btn-sm">
-                            Lihat Semua Fotos
-                        </a>
-                    </div>
-                @else
-                    <div class="text-center py-4">
-                        <i class="fas fa-camera fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Belum ada foto</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Quick Actions -->
 <div class="row">
@@ -211,7 +186,7 @@
                     <div class="col-md-3 col-sm-6">
                         <a href="{{ route('admin.fotos') }}" class="btn btn-outline-warning w-100">
                             <i class="fas fa-camera me-2"></i>
-                            Kelola Fotos
+                            Kelola Gallery
                         </a>
                     </div>
                     <div class="col-md-3 col-sm-6">

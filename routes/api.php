@@ -15,13 +15,13 @@ use App\Http\Controllers\Api\ProfileController;
 | API Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
+| Semua route API ada di sini.
 |
 */
 
+// ========================
 // Public routes
+// ========================
 Route::post('/login', [AuthController::class, 'login']);
 
 // Guest routes (read-only)
@@ -34,18 +34,21 @@ Route::get('/fotos/{foto}', [FotoController::class, 'show']);
 Route::get('/profiles', [ProfileController::class, 'index']);
 Route::get('/profiles/{profile}', [ProfileController::class, 'show']);
 
+// ========================
 // Protected routes (Admin only)
-Route::middleware(['sanctum.petugas', 'auth:sanctum'])->group(function () {
+// ========================
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
-    
+
     // Admin dashboard routes
     Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard']);
         Route::get('/categories', [AdminController::class, 'categories']);
         Route::get('/posts', [AdminController::class, 'posts']);
     });
-    
+
     // Full CRUD routes for admin
     Route::apiResource('kategori', KategoriController::class);
     Route::apiResource('posts', PostController::class)->except(['index', 'show']);
@@ -54,6 +57,7 @@ Route::middleware(['sanctum.petugas', 'auth:sanctum'])->group(function () {
     Route::apiResource('profiles', ProfileController::class)->except(['index', 'show']);
 });
 
-Route::middleware(['sanctum.petugas', 'auth:sanctum'])->get('/user', function (Request $request) {
+// Default user route
+Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Upload Foto</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Test Upload Foto</h2>
+        <p>Form ini untuk testing upload foto ke API Laravel.</p>
+        
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="galery_id">Galery ID:</label>
+                <input type="number" id="galery_id" name="galery_id" value="1" required>
+                <small>Masukkan ID galery yang valid (contoh: 1)</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="file">File Foto:</label>
+                <input type="file" id="file" name="file" accept="image/jpeg,image/jpg,image/png" required>
+                <small>Format: JPEG, JPG, PNG. Maksimal 2MB</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="judul">Judul Foto (Opsional):</label>
+                <input type="text" id="judul" name="judul" placeholder="Masukkan judul foto">
+            </div>
+            
+            <button type="submit">Upload Foto</button>
+        </form>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const resultDiv = document.getElementById('result');
+            
+            // Show loading
+            resultDiv.className = 'result';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Mengupload foto...';
+            
+            try {
+                const response = await fetch('/api/fotos', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>Upload Berhasil!</h3>
+                        <p><strong>ID:</strong> ${data.data.id}</p>
+                        <p><strong>File:</strong> ${data.data.file}</p>
+                        <p><strong>Judul:</strong> ${data.data.judul || 'Tidak ada judul'}</p>
+                        <p><strong>URL:</strong> <a href="${data.data.file_url}" target="_blank">Lihat Foto</a></p>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>Upload Gagal!</h3>
+                        <p><strong>Error:</strong> ${data.message || 'Unknown error'}</p>
+                        ${data.errors ? `<p><strong>Details:</strong> ${JSON.stringify(data.errors)}</p>` : ''}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>Error!</h3>
+                    <p>Terjadi kesalahan: ${error.message}</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

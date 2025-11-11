@@ -45,7 +45,7 @@ return [
     |
     */
     
-    'user_model' => \App\Models\Petugas::class,
+    'user_model' => \App\Models\User::class,
 
     /*
     |--------------------------------------------------------------------------

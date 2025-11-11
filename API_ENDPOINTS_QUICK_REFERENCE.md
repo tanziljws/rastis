@@ -232,7 +232,7 @@ http://localhost:8000/api
 **Request (multipart/form-data):**
 ```
 galery_id: 1
-file: [binary file - jpeg,jpg,png,gif,webp, max 5MB]
+file: [binary file - jpeg,jpg,png,gif,webp]
 judul: "Judul Foto" (optional)
 ```
 
@@ -388,7 +388,7 @@ curl -X DELETE http://localhost:8000/api/fotos/1 \
 
 ### Foto
 - `galery_id`: required, exists:galery,id
-- `file`: required, file, mimes:jpeg,jpg,png,gif,webp, max:5120 (5MB)
+- `file`: required, file, mimes:jpeg,jpg,png,gif,webp
 - `judul`: nullable, string, max:255
 
 ### Profile

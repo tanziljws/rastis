@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Petugas;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -18,27 +18,54 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'username' => 'required|string',
+            'name' => 'nullable|string',
+            'email' => 'nullable|email',
             'password' => 'required|string',
+        ], [
+            'name.nullable' => 'Name atau email harus diisi salah satu.',
+            'email.nullable' => 'Name atau email harus diisi salah satu.',
+            'password.required' => 'Password wajib diisi.',
         ]);
 
-        $petugas = Petugas::where('username', $request->username)->first();
-
-        if (!$petugas || !Hash::check($request->password, $petugas->password)) {
+        // Check if either name or email is provided
+        if (!$request->filled('name') && !$request->filled('email')) {
             throw ValidationException::withMessages([
-                'username' => ['Kredensial yang diberikan salah.'],
+                'credentials' => ['Name atau email harus diisi salah satu.'],
             ]);
         }
 
-        // Revoke existing tokens
-        $petugas->tokens()->delete();
+        // Build query to find user by name or email
+        $query = User::query();
+        if ($request->filled('name')) {
+            $query->where('name', $request->name);
+        } elseif ($request->filled('email')) {
+            $query->where('email', $request->email);
+        }
+
+        $user = $query->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'credentials' => ['Kredensial yang diberikan salah.'],
+            ]);
+        }
+
+        // Revoke existing tokens (khusus web-token)
+        $user->tokens()->where('name', 'web-token')->delete();
 
         // Create new token
-        $token = $petugas->createToken('web-token')->plainTextToken;
+        $token = $user->createToken('web-token')->plainTextToken;
 
-        // Store token in session for web access
-        session(['admin_token' => $token]);
-        session(['admin_user' => $petugas]);
+        // Store token and minimal user info in session for web access
+        session([
+            'admin_token' => $token,
+            'admin_user_id' => $user->id,
+            'admin_user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+        ]);
 
         return redirect()->route('admin.dashboard');
     }
@@ -47,14 +74,17 @@ class AuthController extends Controller
     {
         // Revoke the current token
         if (session('admin_token')) {
-            $petugas = Petugas::find(session('admin_user.id'));
-            if ($petugas) {
-                $petugas->tokens()->where('name', 'web-token')->delete();
+            $id = session('admin_user_id');
+            if ($id) {
+                $user = User::find($id);
+                if ($user) {
+                    $user->tokens()->where('name', 'web-token')->delete();
+                }
             }
         }
 
         // Clear session
-        session()->forget(['admin_token', 'admin_user']);
+        session()->forget(['admin_token', 'admin_user', 'admin_user_id']);
 
         return redirect()->route('admin.login');
     }
