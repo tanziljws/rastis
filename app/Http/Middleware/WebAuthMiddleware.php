@@ -17,12 +17,17 @@ class WebAuthMiddleware
     {
         if (!session('admin_token') || !session('admin_user')) {
             // For AJAX/fetch requests, return JSON response instead of redirect
-            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+            // Check for AJAX indicators: expectsJson, wantsJson, ajax(), or X-Requested-With header
+            if ($request->expectsJson() || 
+                $request->ajax() || 
+                $request->wantsJson() ||
+                $request->header('X-Requested-With') === 'XMLHttpRequest' ||
+                $request->header('Accept') === 'application/json') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized. Please login.',
                     'redirect' => route('admin.login')
-                ], 401);
+                ], 401)->header('Content-Type', 'application/json');
             }
             
             return redirect()->route('admin.login');

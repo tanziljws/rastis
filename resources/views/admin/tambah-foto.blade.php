@@ -605,6 +605,7 @@ document.getElementById('uploadFotoForm').addEventListener('submit', async funct
                     'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
+                    // Don't set Content-Type - browser will set it automatically with boundary for FormData
                 },
                 credentials: 'same-origin',
                 body: formData
@@ -645,7 +646,17 @@ document.getElementById('uploadFotoForm').addEventListener('submit', async funct
             }
         } catch (error) {
             errorCount++;
-            updateProgress(i, 100, false, 'Error: ' + error.message);
+            let errorMsg = 'Error: ' + error.message;
+            
+            // Handle specific network errors
+            if (error.message.includes('Failed to fetch') || error.message.includes('Load failed') || error.message.includes('access control')) {
+                errorMsg = 'Gagal terhubung ke server. Pastikan Anda sudah login dan coba lagi.';
+                // Check if session might be expired
+                showAlert(alertBox, 'warning', 'Koneksi gagal. Silakan refresh halaman dan coba lagi.');
+            }
+            
+            updateProgress(i, 100, false, errorMsg);
+            console.error('Upload error:', error);
         }
     }
     
