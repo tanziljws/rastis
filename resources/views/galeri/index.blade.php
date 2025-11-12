@@ -330,6 +330,7 @@
     transition: all 0.15s ease;
     text-align: center;
     text-decoration: none;
+    position: relative;
 }
 
 .simple-pagination .pagination .page-link:hover {
@@ -357,6 +358,13 @@
     background: #f9fafb;
     border-color: #e5e7eb;
     color: #d1d5db;
+}
+
+/* HAPUS SEMUA KONTEN ASLI DARI PAGE LINK (kecuali nomor halaman) */
+.simple-pagination .pagination .page-link:not([aria-label*="Page"]):not([aria-current="page"]) {
+    font-size: 0 !important;
+    line-height: 0 !important;
+    color: transparent !important;
 }
 
 /* HAPUS SEMUA PANAH, SVG, PATH, DAN ELEMEN VISUAL - HANYA TEKS */
@@ -439,26 +447,62 @@
     line-height: normal !important;
 }
 
-/* Kosongkan konten asli dari link */
+/* Kosongkan konten asli dari link - HAPUS SEMUA */
 .simple-pagination .pagination .page-link[aria-label*="Previous"],
 .simple-pagination .pagination .page-link[aria-label*="Next"],
 .simple-pagination .pagination .page-link[rel="prev"],
 .simple-pagination .pagination .page-link[rel="next"] {
+    font-size: 0 !important;
+    line-height: 0 !important;
     text-indent: -9999px;
     overflow: hidden;
     position: relative;
+    color: transparent !important;
 }
 
+/* Pastikan semua konten di dalam link dihapus */
+.simple-pagination .pagination .page-link[aria-label*="Previous"] *,
+.simple-pagination .pagination .page-link[aria-label*="Next"] *,
+.simple-pagination .pagination .page-link[rel="prev"] *,
+.simple-pagination .pagination .page-link[rel="next"] * {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    font-size: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* Tampilkan teks baru */
 .simple-pagination .pagination .page-link[aria-label*="Previous"]::after,
 .simple-pagination .pagination .page-link[aria-label*="Next"]::after,
 .simple-pagination .pagination .page-link[rel="prev"]::after,
 .simple-pagination .pagination .page-link[rel="next"]::after {
+    content: attr(aria-label) !important;
     text-indent: 0;
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
     white-space: nowrap;
+    font-size: 0.875rem !important;
+    line-height: normal !important;
+    color: inherit !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Override untuk teks spesifik */
+.simple-pagination .pagination .page-link[aria-label*="Previous"]::after {
+    content: "Sebelumnya" !important;
+}
+
+.simple-pagination .pagination .page-link[aria-label*="Next"]::after {
+    content: "Selanjutnya" !important;
 }
 
 /* Responsive */
