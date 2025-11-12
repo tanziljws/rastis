@@ -173,6 +173,13 @@ class FotoController extends Controller
     public function store(Request $request)
     {
         try {
+            // Ensure we return JSON for AJAX requests
+            $isAjax = $request->expectsJson() || 
+                     $request->ajax() || 
+                     $request->wantsJson() ||
+                     $request->header('X-Requested-With') === 'XMLHttpRequest' ||
+                     $request->header('Accept') === 'application/json';
+            
             $validated = $request->validate([
                 'kategori_id' => 'required|exists:kategori,id',
                 'file' => 'required|file|mimes:jpeg,jpg,png|max:5120', // 5MB max
@@ -185,11 +192,11 @@ class FotoController extends Controller
 
             // Check if file is present and valid
             if (!$request->hasFile('file')) {
-                if (request()->expectsJson() || request()->ajax()) {
+                if ($isAjax) {
                     return response()->json([
                         'success' => false,
                         'message' => 'File foto tidak ditemukan.'
-                    ], 400);
+                    ], 400)->header('Content-Type', 'application/json');
                 }
                 return redirect()->back()->with('error', 'Gagal upload.');
             }
@@ -198,11 +205,11 @@ class FotoController extends Controller
             
             // Check if file upload was successful
             if (!$file->isValid()) {
-                if (request()->expectsJson() || request()->ajax()) {
+                if ($isAjax) {
                     return response()->json([
                         'success' => false,
                         'message' => 'File foto tidak valid: ' . $file->getError()
-                    ], 400);
+                    ], 400)->header('Content-Type', 'application/json');
                 }
                 return redirect()->back()->with('error', 'Gagal upload.');
             }
@@ -232,11 +239,11 @@ class FotoController extends Controller
 
             // Check if file was stored successfully
             if (!$path) {
-                if (request()->expectsJson() || request()->ajax()) {
+                if ($isAjax) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Gagal menyimpan file foto. Periksa permission folder storage.'
-                    ], 500);
+                    ], 500)->header('Content-Type', 'application/json');
                 }
                 return redirect()->back()->with('error', 'Gagal upload.');
             }
@@ -254,31 +261,43 @@ class FotoController extends Controller
                 'thumbnail' => $thumbnailPath, // Store thumbnail path
             ]);
 
-            if (request()->expectsJson() || request()->ajax()) {
+            if ($isAjax) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Foto berhasil diupload!',
                     'data' => $foto->load('kategori')
-                ]);
+                ])->header('Content-Type', 'application/json');
             }
 
             return redirect()->route('admin.fotos')->with('success', 'Foto berhasil diupload.');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            if (request()->expectsJson() || request()->ajax()) {
+            $isAjax = request()->expectsJson() || 
+                     request()->ajax() || 
+                     request()->wantsJson() ||
+                     request()->header('X-Requested-With') === 'XMLHttpRequest' ||
+                     request()->header('Accept') === 'application/json';
+            
+            if ($isAjax) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Validasi gagal',
                     'errors' => $e->errors()
-                ], 422);
+                ], 422)->header('Content-Type', 'application/json');
             }
             return redirect()->back()->with('error', 'Gagal upload.')->withInput();
         } catch (\Exception $e) {
-            if (request()->expectsJson() || request()->ajax()) {
+            $isAjax = request()->expectsJson() || 
+                     request()->ajax() || 
+                     request()->wantsJson() ||
+                     request()->header('X-Requested-With') === 'XMLHttpRequest' ||
+                     request()->header('Accept') === 'application/json';
+            
+            if ($isAjax) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-                ], 500);
+                ], 500)->header('Content-Type', 'application/json');
             }
             return redirect()->back()->with('error', 'Gagal upload.');
         }

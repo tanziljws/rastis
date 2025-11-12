@@ -599,17 +599,35 @@ document.getElementById('uploadFotoForm').addEventListener('submit', async funct
                 return;
             }
             
-            const response = await fetch('{{ route("admin.fotos.store") }}', {
+            const token = csrfToken.getAttribute('content');
+            if (!token) {
+                showAlert(alertBox, 'danger', 'CSRF token kosong. Silakan refresh halaman.');
+                return;
+            }
+            
+            // Get the upload URL
+            const uploadUrl = '{{ route("admin.fotos.store") }}';
+            console.log('Upload URL:', uploadUrl);
+            console.log('CSRF Token:', token ? 'Found' : 'Missing');
+            console.log('File:', file.name, file.size, 'bytes');
+            
+            // Create fetch request with proper error handling
+            const response = await fetch(uploadUrl, {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                    'X-CSRF-TOKEN': token,
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                     // Don't set Content-Type - browser will set it automatically with boundary for FormData
                 },
                 credentials: 'same-origin',
-                body: formData
+                body: formData,
+                // Add redirect handling
+                redirect: 'follow'
             });
+            
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
             
             // Handle 401 Unauthorized
             if (response.status === 401) {
@@ -649,10 +667,19 @@ document.getElementById('uploadFotoForm').addEventListener('submit', async funct
             let errorMsg = 'Error: ' + error.message;
             
             // Handle specific network errors
-            if (error.message.includes('Failed to fetch') || error.message.includes('Load failed') || error.message.includes('access control')) {
+            if (error.message.includes('Failed to fetch') || 
+                error.message.includes('Load failed') || 
+                error.message.includes('access control') ||
+                error.message.includes('NetworkError') ||
+                error.name === 'TypeError') {
                 errorMsg = 'Gagal terhubung ke server. Pastikan Anda sudah login dan coba lagi.';
-                // Check if session might be expired
-                showAlert(alertBox, 'warning', 'Koneksi gagal. Silakan refresh halaman dan coba lagi.');
+                console.error('Network error details:', {
+                    message: error.message,
+                    name: error.name,
+                    stack: error.stack
+                });
+                // Check if session might be expired - try to reload page
+                showAlert(alertBox, 'warning', 'Koneksi gagal. Silakan refresh halaman dan coba lagi. Jika masalah berlanjut, coba logout dan login kembali.');
             }
             
             updateProgress(i, 100, false, errorMsg);
