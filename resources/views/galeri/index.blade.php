@@ -135,7 +135,7 @@
                 <div class="row mt-5">
                     <div class="col-12 d-flex justify-content-center">
                         <div class="simple-pagination">
-                            {{ $albumsPaginated->appends(request()->query())->links('pagination::simple') }}
+                            {{ $albumsPaginated->appends(request()->query())->links() }}
                         </div>
                     </div>
                 </div>
@@ -361,20 +361,29 @@
 
 /* Hide all icons/arrows - show only text */
 .simple-pagination .pagination .page-link svg,
-.simple-pagination .pagination .page-link i,
-.simple-pagination .pagination .page-link span[aria-hidden="true"] {
+.simple-pagination .pagination .page-link i {
     display: none !important;
 }
 
-/* Show only text for Previous/Next */
-.simple-pagination .pagination .page-link[aria-label*="Previous"]::before {
-    content: "Prev";
+/* Replace arrow symbols with text */
+.simple-pagination .pagination .page-link[aria-label*="Previous"] span:not(.visually-hidden),
+.simple-pagination .pagination .page-link[aria-label*="Next"] span:not(.visually-hidden) {
+    display: none !important;
+}
+
+.simple-pagination .pagination .page-link[aria-label*="Previous"]::after {
+    content: "Sebelumnya";
     display: inline;
 }
 
 .simple-pagination .pagination .page-link[aria-label*="Next"]::after {
-    content: "Next";
+    content: "Selanjutnya";
     display: inline;
+}
+
+.simple-pagination .pagination .page-link[aria-label*="Previous"]::before,
+.simple-pagination .pagination .page-link[aria-label*="Next"]::before {
+    display: none !important;
 }
 
 /* Responsive */
