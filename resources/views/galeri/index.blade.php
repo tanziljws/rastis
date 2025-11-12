@@ -307,65 +307,80 @@
     opacity: 0.5;
 }
 
-/* Custom Pagination */
+/* Custom Pagination - Simple & Small */
 .custom-pagination {
     width: 100%;
-    max-width: 600px;
+    max-width: 500px;
 }
 
 .custom-pagination .pagination {
     justify-content: center;
     margin: 0;
-    gap: 0.5rem;
+    gap: 0.2rem;
+    font-size: 0.85rem;
 }
 
 .custom-pagination .pagination .page-link {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-    border-radius: 8px;
+    padding: 0.3rem 0.45rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
     border: 1px solid #e5e7eb;
     color: #6b7280;
     background: white;
-    transition: all 0.2s ease;
-    min-width: 40px;
+    transition: all 0.15s ease;
+    min-width: 30px;
     text-align: center;
+    line-height: 1.3;
 }
 
 .custom-pagination .pagination .page-link:hover {
     background: #f3f4f6;
     border-color: #2563eb;
     color: #2563eb;
-    transform: translateY(-2px);
 }
 
 .custom-pagination .pagination .page-item.active .page-link {
     background: #2563eb;
     border-color: #2563eb;
     color: white;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .custom-pagination .pagination .page-item.disabled .page-link {
     background: #f9fafb;
     border-color: #e5e7eb;
-    color: #9ca3af;
+    color: #d1d5db;
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: 0.5;
 }
 
 .custom-pagination .pagination .page-item.disabled .page-link:hover {
-    transform: none;
     background: #f9fafb;
     border-color: #e5e7eb;
-    color: #9ca3af;
+    color: #d1d5db;
 }
 
-/* Make pagination icons smaller */
+/* Make pagination icons/arrows super small */
 .custom-pagination .pagination .page-link svg,
-.custom-pagination .pagination .page-link i {
+.custom-pagination .pagination .page-link i,
+.custom-pagination .pagination .page-link span[aria-hidden="true"] {
+    font-size: 0.6rem !important;
+    line-height: 1;
+    display: inline-block;
+}
+
+/* Override Bootstrap's default large arrow icons - make them text-based */
+.custom-pagination .pagination .page-link[aria-label*="Previous"],
+.custom-pagination .pagination .page-link[aria-label*="Next"] {
+    padding: 0.3rem 0.35rem;
     font-size: 0.75rem;
-    width: 0.75rem;
-    height: 0.75rem;
+}
+
+/* Hide default Bootstrap arrow symbols and use simple text */
+.custom-pagination .pagination .page-link[aria-label*="Previous"] span:not(.visually-hidden),
+.custom-pagination .pagination .page-link[aria-label*="Next"] span:not(.visually-hidden) {
+    font-size: 0.6rem !important;
+    line-height: 1;
 }
 
 /* Responsive */
@@ -379,13 +394,18 @@
     }
     
     .custom-pagination .pagination {
-        gap: 0.25rem;
+        gap: 0.2rem;
     }
     
     .custom-pagination .pagination .page-link {
-        padding: 0.4rem 0.6rem;
-        font-size: 0.8rem;
-        min-width: 36px;
+        padding: 0.3rem 0.4rem;
+        font-size: 0.75rem;
+        min-width: 30px;
+    }
+    
+    .custom-pagination .pagination .page-link svg,
+    .custom-pagination .pagination .page-link i {
+        font-size: 0.6rem !important;
     }
 }
 </style>
