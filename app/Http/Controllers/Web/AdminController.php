@@ -91,51 +91,25 @@ class AdminController extends Controller
     public function profilesUpdate(Request $request)
     {
         $validated = $request->validate([
-            'nama_sekolah' => 'required|string|max:255',
             'deskripsi' => 'required|string',
-            'alamat' => 'required|string|max:500',
-            'telepon' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
-            'website' => 'nullable|url|max:255',
             'visi' => 'nullable|string',
             'misi' => 'nullable|string',
-            'sejarah' => 'nullable|string',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         $profil = Profil::first();
         
         if (!$profil) {
-            $profil = new Profil();
+            // Create default profil if doesn't exist
+            $profil = Profil::create([
+                'nama_sekolah' => 'SMKN 4 Kota Bogor',
+                'alamat' => 'Jl. Raya Tajur, Kp. Buntar RT.02/RW.08, Kel. Muara sari, Kec. Bogor Selatan, Kota Bogor, Jawa Barat 16137',
+            ]);
         }
 
-        // Handle logo upload
-        if ($request->hasFile('logo')) {
-            // Delete old logo if exists
-            if ($profil->logo && Storage::disk('public')->exists($profil->logo)) {
-                Storage::disk('public')->delete($profil->logo);
-            }
-
-            // Store new logo
-            $path = $request->file('logo')->store('logos', 'public');
-            $profil->logo = $path;
-            
-            // Ensure file permissions
-            if (Storage::disk('public')->exists($path)) {
-                chmod(Storage::disk('public')->path($path), 0644);
-            }
-        }
-
-        // Update other fields
-        $profil->nama_sekolah = $validated['nama_sekolah'];
+        // Update only deskripsi, visi, and misi
         $profil->deskripsi = $validated['deskripsi'];
-        $profil->alamat = $validated['alamat'];
-        $profil->telepon = $validated['telepon'] ?? null;
-        $profil->email = $validated['email'] ?? null;
-        $profil->website = $validated['website'] ?? null;
         $profil->visi = $validated['visi'] ?? null;
         $profil->misi = $validated['misi'] ?? null;
-        $profil->sejarah = $validated['sejarah'] ?? null;
         
         $profil->save();
 
