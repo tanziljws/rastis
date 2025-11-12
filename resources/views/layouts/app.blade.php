@@ -188,7 +188,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
-                <img src="{{ asset('images/logo-smkn4-bogor.png') }}" alt="SMK NEGERI 4 KOTA BOGOR" class="me-2" style="height: 40px; width: auto;">
+                <img src="{{ asset('images/logo-smkn4-bogor.png') }}" alt="SMK NEGERI 4 KOTA BOGOR" class="me-2" style="height: 40px; width: auto; background: transparent; padding: 0;">
                 <span>Sekolah Galeri</span>
             </a>
             

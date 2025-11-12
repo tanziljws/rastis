@@ -27,22 +27,38 @@
         
         .hero-section {
             position: relative;
-            height: 100vh;
+            min-height: 100vh;
             width: 100%;
-            /* Background from database or fallback */
-            background: url('{{ isset($heroBackground) && $heroBackground ? $heroBackground : asset('images/school-background.jpg') }}') center center,
-                /* Fallback gradient */
-                #2563eb;
-            background-size: cover;
-            background-repeat: no-repeat;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
             color: white;
             overflow: hidden;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.85), rgba(29, 78, 216, 0.9));
         }
         
+        .hero-background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            z-index: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .hero-background-image.loading {
+            opacity: 0;
+        }
+        
+        .hero-background-image.loaded {
+            opacity: 1;
+        }
+        
+        /* Modern gradient overlay for better text readability */
         .hero-section::before {
             content: '';
             position: absolute;
@@ -50,11 +66,16 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(37, 99, 235, 0.25);
+            background: linear-gradient(
+                135deg,
+                rgba(37, 99, 235, 0.4) 0%,
+                rgba(29, 78, 216, 0.5) 50%,
+                rgba(0, 0, 0, 0.3) 100%
+            );
             z-index: 1;
         }
         
-        /* Additional overlay for better text readability */
+        /* Subtle animated overlay */
         .hero-section::after {
             content: '';
             position: absolute;
@@ -62,8 +83,21 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.05);
+            background: rgba(0, 0, 0, 0.1);
             z-index: 1;
+            animation: fadeIn 1s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Responsive hero height */
+        @media (max-width: 768px) {
+            .hero-section {
+                min-height: 80vh;
+            }
         }
         
         .hero-content {
@@ -611,7 +645,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
-                <img src="{{ asset('images/logo-smkn4-bogor.png') }}" alt="SMK NEGERI 4 KOTA BOGOR" class="me-2" style="height: 40px; width: auto;">
+                <img src="{{ asset('images/logo-smkn4-bogor.png') }}" alt="SMK NEGERI 4 KOTA BOGOR" class="me-2" style="height: 40px; width: auto; background: transparent; padding: 0;">
                 <span>Sekolah Galeri</span>
             </a>
             
@@ -640,6 +674,21 @@
 
     <!-- Hero Section -->
     <section class="hero-section" id="beranda">
+        @if(isset($heroBackground) && $heroBackground)
+            <img src="{{ $heroBackground }}" 
+                 alt="SMK NEGERI 4 KOTA BOGOR" 
+                 class="hero-background-image loading"
+                 loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.style.display='none'">
+        @else
+            <img src="{{ asset('images/school-background.jpg') }}" 
+                 alt="SMK NEGERI 4 KOTA BOGOR" 
+                 class="hero-background-image loading"
+                 loading="lazy"
+                 onload="this.classList.add('loaded')"
+                 onerror="this.style.display='none'">
+        @endif
         <div class="hero-content">
             
             <!-- Main Title -->
