@@ -35,6 +35,10 @@ COPY . /var/www/html
 # Copy vendor from builder stage
 COPY --from=vendor /app/vendor /var/www/html/vendor
 
+# Copy entrypoint script
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Run Laravel package discovery now that artisan exists
 RUN php artisan package:discover --ansi || echo "Package discovery skipped"
 
@@ -49,20 +53,5 @@ ENV APP_ENV=production \
 # Expose port (Railway will set $PORT)
 EXPOSE 8080
 
-# Create startup script (using sh -c to access environment variables)
-RUN echo '#!/bin/sh\n\
-set -e\n\
-echo "🚀 Starting Laravel application..."\n\
-php artisan key:generate --force || true\n\
-php artisan storage:link || true\n\
-php artisan migrate --force || true\n\
-php artisan config:cache || true\n\
-php artisan route:cache || true\n\
-php artisan view:cache || true\n\
-PORT="${PORT:-8080}"\n\
-echo "✅ Starting server on port $PORT"\n\
-exec php artisan serve --host=0.0.0.0 --port="$PORT"' > /start.sh && \
-    chmod +x /start.sh
-
-# Start script (use sh to execute script so env vars are available)
-CMD ["sh", "/start.sh"]
+# Use entrypoint with shell (ensures env vars are available)
+ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
