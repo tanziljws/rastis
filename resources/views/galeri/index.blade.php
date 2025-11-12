@@ -307,7 +307,7 @@
     opacity: 0.5;
 }
 
-/* Custom Pagination - Simple & Small */
+/* Custom Pagination - SUPER SIMPLE & TINY */
 .custom-pagination {
     width: 100%;
     max-width: 500px;
@@ -316,21 +316,25 @@
 .custom-pagination .pagination {
     justify-content: center;
     margin: 0;
-    gap: 0.2rem;
-    font-size: 0.85rem;
+    gap: 0.15rem;
+    font-size: 0.75rem;
 }
 
 .custom-pagination .pagination .page-link {
-    padding: 0.3rem 0.45rem;
-    font-size: 0.85rem;
+    padding: 0.25rem 0.4rem;
+    font-size: 0.75rem;
     border-radius: 4px;
     border: 1px solid #e5e7eb;
     color: #6b7280;
     background: white;
     transition: all 0.15s ease;
-    min-width: 30px;
+    min-width: 28px;
     text-align: center;
-    line-height: 1.3;
+    line-height: 1.2;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .custom-pagination .pagination .page-link:hover {
@@ -360,27 +364,56 @@
     color: #d1d5db;
 }
 
-/* Make pagination icons/arrows super small */
-.custom-pagination .pagination .page-link svg,
-.custom-pagination .pagination .page-link i,
-.custom-pagination .pagination .page-link span[aria-hidden="true"] {
-    font-size: 0.6rem !important;
-    line-height: 1;
-    display: inline-block;
+/* FORCE ALL ARROWS/ICONS TO BE SUPER TINY */
+.custom-pagination .pagination .page-link * {
+    font-size: 0.4rem !important;
+    line-height: 1 !important;
+    transform: scale(0.6) !important;
+    max-width: 6px !important;
+    max-height: 6px !important;
 }
 
-/* Override Bootstrap's default large arrow icons - make them text-based */
+.custom-pagination .pagination .page-link svg,
+.custom-pagination .pagination .page-link i {
+    font-size: 0.4rem !important;
+    width: 0.4rem !important;
+    height: 0.4rem !important;
+    line-height: 1 !important;
+    transform: scale(0.6) !important;
+}
+
+/* Previous/Next buttons - EXTRA SMALL */
 .custom-pagination .pagination .page-link[aria-label*="Previous"],
 .custom-pagination .pagination .page-link[aria-label*="Next"] {
-    padding: 0.3rem 0.35rem;
-    font-size: 0.75rem;
+    padding: 0.2rem 0.25rem;
+    font-size: 0.65rem;
+    min-width: 24px;
 }
 
-/* Hide default Bootstrap arrow symbols and use simple text */
-.custom-pagination .pagination .page-link[aria-label*="Previous"] span:not(.visually-hidden),
-.custom-pagination .pagination .page-link[aria-label*="Next"] span:not(.visually-hidden) {
-    font-size: 0.6rem !important;
-    line-height: 1;
+.custom-pagination .pagination .page-link[aria-label*="Previous"] *,
+.custom-pagination .pagination .page-link[aria-label*="Next"] * {
+    font-size: 0.4rem !important;
+    transform: scale(0.5) !important;
+    max-width: 5px !important;
+    max-height: 5px !important;
+}
+
+/* Hide Bootstrap's default chevron symbols if they exist */
+.custom-pagination .pagination .page-link span[aria-hidden="true"] {
+    font-size: 0.4rem !important;
+    line-height: 1 !important;
+    display: inline-block;
+    max-width: 6px;
+    max-height: 6px;
+    overflow: hidden;
+    transform: scale(0.6) !important;
+}
+
+/* Force all SVG elements to be tiny */
+.custom-pagination .pagination .page-link svg {
+    width: 6px !important;
+    height: 6px !important;
+    transform: scale(0.5) !important;
 }
 
 /* Responsive */
@@ -394,18 +427,28 @@
     }
     
     .custom-pagination .pagination {
-        gap: 0.2rem;
+        gap: 0.1rem;
+        font-size: 0.7rem;
     }
     
     .custom-pagination .pagination .page-link {
-        padding: 0.3rem 0.4rem;
-        font-size: 0.75rem;
-        min-width: 30px;
+        padding: 0.2rem 0.3rem;
+        font-size: 0.7rem;
+        min-width: 26px;
+        height: 26px;
+    }
+    
+    .custom-pagination .pagination .page-link * {
+        font-size: 0.45rem !important;
+        max-width: 7px !important;
+        max-height: 7px !important;
     }
     
     .custom-pagination .pagination .page-link svg,
     .custom-pagination .pagination .page-link i {
-        font-size: 0.6rem !important;
+        font-size: 0.45rem !important;
+        width: 0.45rem !important;
+        height: 0.45rem !important;
     }
 }
 </style>
