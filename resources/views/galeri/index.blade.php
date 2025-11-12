@@ -134,8 +134,8 @@
             @if($albumsPaginated->hasPages())
                 <div class="row mt-5">
                     <div class="col-12 d-flex justify-content-center">
-                        <div class="custom-pagination">
-                            {{ $albumsPaginated->appends(request()->query())->links() }}
+                        <div class="simple-pagination">
+                            {{ $albumsPaginated->appends(request()->query())->links('pagination::simple') }}
                         </div>
                     </div>
                 </div>
@@ -307,113 +307,74 @@
     opacity: 0.5;
 }
 
-/* Custom Pagination - SUPER SIMPLE & TINY */
-.custom-pagination {
+/* Simple Pagination - No Arrows, Just Text */
+.simple-pagination {
     width: 100%;
-    max-width: 500px;
+    max-width: 400px;
 }
 
-.custom-pagination .pagination {
+.simple-pagination .pagination {
     justify-content: center;
     margin: 0;
-    gap: 0.15rem;
-    font-size: 0.75rem;
+    gap: 0.3rem;
+    font-size: 0.875rem;
 }
 
-.custom-pagination .pagination .page-link {
-    padding: 0.25rem 0.4rem;
-    font-size: 0.75rem;
-    border-radius: 4px;
+.simple-pagination .pagination .page-link {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
     border: 1px solid #e5e7eb;
     color: #6b7280;
     background: white;
     transition: all 0.15s ease;
-    min-width: 28px;
     text-align: center;
-    line-height: 1.2;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    text-decoration: none;
 }
 
-.custom-pagination .pagination .page-link:hover {
+.simple-pagination .pagination .page-link:hover {
     background: #f3f4f6;
     border-color: #2563eb;
     color: #2563eb;
 }
 
-.custom-pagination .pagination .page-item.active .page-link {
+.simple-pagination .pagination .page-item.active .page-link {
     background: #2563eb;
     border-color: #2563eb;
     color: white;
     font-weight: 500;
 }
 
-.custom-pagination .pagination .page-item.disabled .page-link {
+.simple-pagination .pagination .page-item.disabled .page-link {
     background: #f9fafb;
     border-color: #e5e7eb;
     color: #d1d5db;
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: 0.6;
 }
 
-.custom-pagination .pagination .page-item.disabled .page-link:hover {
+.simple-pagination .pagination .page-item.disabled .page-link:hover {
     background: #f9fafb;
     border-color: #e5e7eb;
     color: #d1d5db;
 }
 
-/* FORCE ALL ARROWS/ICONS TO BE SUPER TINY */
-.custom-pagination .pagination .page-link * {
-    font-size: 0.4rem !important;
-    line-height: 1 !important;
-    transform: scale(0.6) !important;
-    max-width: 6px !important;
-    max-height: 6px !important;
+/* Hide all icons/arrows - show only text */
+.simple-pagination .pagination .page-link svg,
+.simple-pagination .pagination .page-link i,
+.simple-pagination .pagination .page-link span[aria-hidden="true"] {
+    display: none !important;
 }
 
-.custom-pagination .pagination .page-link svg,
-.custom-pagination .pagination .page-link i {
-    font-size: 0.4rem !important;
-    width: 0.4rem !important;
-    height: 0.4rem !important;
-    line-height: 1 !important;
-    transform: scale(0.6) !important;
+/* Show only text for Previous/Next */
+.simple-pagination .pagination .page-link[aria-label*="Previous"]::before {
+    content: "Prev";
+    display: inline;
 }
 
-/* Previous/Next buttons - EXTRA SMALL */
-.custom-pagination .pagination .page-link[aria-label*="Previous"],
-.custom-pagination .pagination .page-link[aria-label*="Next"] {
-    padding: 0.2rem 0.25rem;
-    font-size: 0.65rem;
-    min-width: 24px;
-}
-
-.custom-pagination .pagination .page-link[aria-label*="Previous"] *,
-.custom-pagination .pagination .page-link[aria-label*="Next"] * {
-    font-size: 0.4rem !important;
-    transform: scale(0.5) !important;
-    max-width: 5px !important;
-    max-height: 5px !important;
-}
-
-/* Hide Bootstrap's default chevron symbols if they exist */
-.custom-pagination .pagination .page-link span[aria-hidden="true"] {
-    font-size: 0.4rem !important;
-    line-height: 1 !important;
-    display: inline-block;
-    max-width: 6px;
-    max-height: 6px;
-    overflow: hidden;
-    transform: scale(0.6) !important;
-}
-
-/* Force all SVG elements to be tiny */
-.custom-pagination .pagination .page-link svg {
-    width: 6px !important;
-    height: 6px !important;
-    transform: scale(0.5) !important;
+.simple-pagination .pagination .page-link[aria-label*="Next"]::after {
+    content: "Next";
+    display: inline;
 }
 
 /* Responsive */
@@ -426,29 +387,14 @@
         padding-top: 100%; /* Square on mobile */
     }
     
-    .custom-pagination .pagination {
-        gap: 0.1rem;
-        font-size: 0.7rem;
+    .simple-pagination .pagination {
+        gap: 0.2rem;
+        font-size: 0.8rem;
     }
     
-    .custom-pagination .pagination .page-link {
-        padding: 0.2rem 0.3rem;
-        font-size: 0.7rem;
-        min-width: 26px;
-        height: 26px;
-    }
-    
-    .custom-pagination .pagination .page-link * {
-        font-size: 0.45rem !important;
-        max-width: 7px !important;
-        max-height: 7px !important;
-    }
-    
-    .custom-pagination .pagination .page-link svg,
-    .custom-pagination .pagination .page-link i {
-        font-size: 0.45rem !important;
-        width: 0.45rem !important;
-        height: 0.45rem !important;
+    .simple-pagination .pagination .page-link {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.8rem;
     }
 }
 </style>
