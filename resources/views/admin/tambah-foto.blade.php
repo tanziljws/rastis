@@ -592,18 +592,51 @@ document.getElementById('uploadFotoForm').addEventListener('submit', async funct
         formData.append('batch_id', batchId);
         
         try {
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (!csrfToken) {
+                showAlert(alertBox, 'danger', 'CSRF token tidak ditemukan. Silakan refresh halaman.');
+                return;
+            }
+            
             const response = await fetch('{{ route("admin.fotos.store") }}', {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
+                    'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin',
                 body: formData
             });
             
+            // Handle 401 Unauthorized
+            if (response.status === 401) {
+                const json = await response.json();
+                showAlert(alertBox, 'danger', 'Session expired. Redirecting to login...');
+                setTimeout(() => {
+                    window.location.href = json.redirect || '{{ route("admin.login") }}';
+                }, 2000);
+                return;
+            }
+            
+            // Handle other errors
+            if (!response.ok) {
+                let errorMessage = 'Upload gagal';
+                try {
+                    const json = await response.json();
+                    errorMessage = json.message || json.error || 'Upload gagal';
+                } catch (e) {
+                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                }
+                errorCount++;
+                updateProgress(i, 100, false, errorMessage);
+                return;
+            }
+            
             const json = await response.json();
             
-            if (response.ok && json.success) {
+            if (json.success) {
                 successCount++;
                 updateProgress(i, 100, true);
             } else {

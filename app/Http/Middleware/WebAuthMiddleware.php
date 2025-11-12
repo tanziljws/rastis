@@ -16,6 +16,15 @@ class WebAuthMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!session('admin_token') || !session('admin_user')) {
+            // For AJAX/fetch requests, return JSON response instead of redirect
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Please login.',
+                    'redirect' => route('admin.login')
+                ], 401);
+            }
+            
             return redirect()->route('admin.login');
         }
 
