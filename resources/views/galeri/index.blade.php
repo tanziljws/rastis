@@ -359,31 +359,106 @@
     color: #d1d5db;
 }
 
-/* Hide all icons/arrows - show only text */
+/* HAPUS SEMUA PANAH, SVG, PATH, DAN ELEMEN VISUAL - HANYA TEKS */
 .simple-pagination .pagination .page-link svg,
-.simple-pagination .pagination .page-link i {
+.simple-pagination .pagination .page-link path,
+.simple-pagination .pagination .page-link polygon,
+.simple-pagination .pagination .page-link circle,
+.simple-pagination .pagination .page-link rect,
+.simple-pagination .pagination .page-link line,
+.simple-pagination .pagination .page-link i,
+.simple-pagination .pagination .page-link span:not(.visually-hidden),
+.simple-pagination .pagination .page-link::before {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    content: none !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
 }
 
-/* Replace arrow symbols with text */
-.simple-pagination .pagination .page-link[aria-label*="Previous"] span:not(.visually-hidden),
-.simple-pagination .pagination .page-link[aria-label*="Next"] span:not(.visually-hidden) {
+/* Hapus semua child elements termasuk nested */
+.simple-pagination .pagination .page-link > *,
+.simple-pagination .pagination .page-link > * > *,
+.simple-pagination .pagination .page-link svg *,
+.simple-pagination .pagination .page-link path {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
 }
 
-.simple-pagination .pagination .page-link[aria-label*="Previous"]::after {
-    content: "Sebelumnya";
-    display: inline;
+/* Ganti Previous dengan teks - kosongkan dulu semua konten */
+.simple-pagination .pagination .page-link[aria-label*="Previous"],
+.simple-pagination .pagination .page-link[rel="prev"] {
+    font-size: 0.875rem;
+    text-indent: 0;
 }
 
-.simple-pagination .pagination .page-link[aria-label*="Next"]::after {
-    content: "Selanjutnya";
-    display: inline;
+.simple-pagination .pagination .page-link[aria-label*="Previous"]::after,
+.simple-pagination .pagination .page-link[rel="prev"]::after {
+    content: "Sebelumnya" !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: auto !important;
+    font-size: 0.875rem !important;
+    line-height: normal !important;
 }
 
-.simple-pagination .pagination .page-link[aria-label*="Previous"]::before,
-.simple-pagination .pagination .page-link[aria-label*="Next"]::before {
-    display: none !important;
+/* Ganti Next dengan teks */
+.simple-pagination .pagination .page-link[aria-label*="Next"],
+.simple-pagination .pagination .page-link[rel="next"] {
+    font-size: 0.875rem;
+    text-indent: 0;
+}
+
+.simple-pagination .pagination .page-link[aria-label*="Next"]::after,
+.simple-pagination .pagination .page-link[rel="next"]::after {
+    content: "Selanjutnya" !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: auto !important;
+    font-size: 0.875rem !important;
+    line-height: normal !important;
+}
+
+/* Kosongkan konten asli dari link */
+.simple-pagination .pagination .page-link[aria-label*="Previous"],
+.simple-pagination .pagination .page-link[aria-label*="Next"],
+.simple-pagination .pagination .page-link[rel="prev"],
+.simple-pagination .pagination .page-link[rel="next"] {
+    text-indent: -9999px;
+    overflow: hidden;
+    position: relative;
+}
+
+.simple-pagination .pagination .page-link[aria-label*="Previous"]::after,
+.simple-pagination .pagination .page-link[aria-label*="Next"]::after,
+.simple-pagination .pagination .page-link[rel="prev"]::after,
+.simple-pagination .pagination .page-link[rel="next"]::after {
+    text-indent: 0;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
 }
 
 /* Responsive */
