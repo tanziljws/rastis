@@ -96,7 +96,7 @@
                                          class="album-photo-image"
                                          loading="lazy"
                                          data-src="{{ $foto->file_url }}"
-                                         onerror="this.src='https://via.placeholder.com/400x300/2563eb/ffffff?text=Gambar+Tidak+Ditemukan'">
+                                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect fill=\'%232563eb\' width=\'400\' height=\'300\'/%3E%3Ctext fill=\'%23ffffff\' font-family=\'Arial\' font-size=\'16\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\'%3EGambar Tidak Ditemukan%3C/text%3E%3C/svg%3E';">
                                     <div class="album-photo-overlay">
                                         <div class="album-photo-overlay-content">
                                             <i class="fas fa-search-plus fa-2x mb-2"></i>
