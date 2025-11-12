@@ -646,7 +646,7 @@ function xhrRequest(url, options = {}) {
 
 // Load categories for select dropdowns
 function loadCategories() {
-    return xhrRequest('{{ route("admin.api.categories") }}', {
+    return xhrRequest('/admin/api/categories', {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -720,7 +720,7 @@ function editFoto(id, judul, kategori_id) {
 
 // Load album photos using xhrRequest helper to avoid access control issues
 function loadAlbumPhotos(fotoId) {
-    const url = `{{ route("admin.api.fotos.album", ":id") }}`.replace(':id', fotoId);
+    const url = `/admin/api/fotos/${fotoId}/album`;
     
     xhrRequest(url, {
         method: 'GET',
@@ -830,7 +830,7 @@ document.getElementById('deleteSelectedBtn')?.addEventListener('click', function
     
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
-    xhrRequest('{{ route("admin.api.fotos.bulk-delete") }}', {
+    xhrRequest('/admin/api/fotos/bulk-delete', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': csrfToken,
@@ -938,7 +938,7 @@ document.getElementById('editFotoForm').addEventListener('submit', function(e) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
     updatePromises.push(
-        xhrRequest(`{{ route("admin.fotos.update", ":id") }}`.replace(':id', fotoId), {
+        xhrRequest(`/admin/fotos/${fotoId}/update`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
@@ -959,7 +959,7 @@ document.getElementById('editFotoForm').addEventListener('submit', function(e) {
         addFormData.append('kategori_id', kategoriId);
         
         updatePromises.push(
-            xhrRequest(`{{ route("admin.api.fotos.add-photos", ":id") }}`.replace(':id', fotoId), {
+            xhrRequest(`/admin/api/fotos/${fotoId}/add-photos`, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
@@ -1007,7 +1007,7 @@ function deleteFoto(id) {
     
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
-    xhrRequest(`{{ route("admin.fotos.destroy", ":id") }}`.replace(':id', id), {
+    xhrRequest(`/admin/fotos/${id}`, {
         method: 'DELETE',
         headers: {
             'X-CSRF-TOKEN': csrfToken,
