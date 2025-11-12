@@ -23,6 +23,9 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install -j$(nproc) pdo pdo_mysql gd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Copy composer binary from composer image
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
 # Set working directory
 WORKDIR /var/www/html
 
@@ -32,8 +35,8 @@ COPY . /var/www/html
 # Copy vendor from builder stage
 COPY --from=vendor /app/vendor /var/www/html/vendor
 
-# Run composer scripts now that artisan exists
-RUN composer dump-autoload --optimize --classmap-authoritative || true
+# Run Laravel package discovery now that artisan exists
+RUN php artisan package:discover --ansi || echo "Package discovery skipped"
 
 # Ensure storage/framework is writable
 RUN mkdir -p storage/framework/{cache,sessions,views} \
@@ -46,11 +49,20 @@ ENV APP_ENV=production \
 # Expose port (Railway will set $PORT)
 EXPOSE 8080
 
-# Start script - runs migrations and starts server
-CMD sh -c "php artisan key:generate --force || true && \
-           php artisan storage:link || true && \
-           php artisan migrate --force || true && \
-           php artisan config:cache && \
-           php artisan route:cache && \
-           php artisan view:cache && \
-           php artisan serve --host=0.0.0.0 --port=\${PORT:-8080}"
+# Create startup script (using sh -c to access environment variables)
+RUN echo '#!/bin/sh\n\
+set -e\n\
+echo "🚀 Starting Laravel application..."\n\
+php artisan key:generate --force || true\n\
+php artisan storage:link || true\n\
+php artisan migrate --force || true\n\
+php artisan config:cache || true\n\
+php artisan route:cache || true\n\
+php artisan view:cache || true\n\
+PORT="${PORT:-8080}"\n\
+echo "✅ Starting server on port $PORT"\n\
+exec php artisan serve --host=0.0.0.0 --port="$PORT"' > /start.sh && \
+    chmod +x /start.sh
+
+# Start script (use sh to execute script so env vars are available)
+CMD ["sh", "/start.sh"]
