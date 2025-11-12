@@ -718,65 +718,46 @@ function editFoto(id, judul, kategori_id) {
     new bootstrap.Modal(document.getElementById('editFotoModal')).show();
 }
 
-// Load album photos using XMLHttpRequest to avoid access control issues
+// Load album photos using xhrRequest helper to avoid access control issues
 function loadAlbumPhotos(fotoId) {
     const url = `{{ route("admin.api.fotos.album", ":id") }}`.replace(':id', fotoId);
-    const xhr = new XMLHttpRequest();
     
-    xhr.open('GET', url, true);
-    xhr.setRequestHeader('Accept', 'application/json');
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    xhr.withCredentials = true;
-    
-    xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-                const data = JSON.parse(xhr.responseText);
-                if (data.success) {
-                    albumPhotosData = data.data;
-                    renderAlbumPhotos(data.data);
-                    
-                    // Set judul and kategori if not set
-                    if (!document.getElementById('edit_judul').value && data.judul) {
-                        document.getElementById('edit_judul').value = data.judul;
-                    }
-                    if (!document.getElementById('edit_kategori_id').value && data.kategori_id) {
-                        document.getElementById('edit_kategori_id').value = data.kategori_id;
-                    }
-                } else {
-                    document.getElementById('albumPhotosContainer').innerHTML = `
-                        <div class="col-12 text-center py-4">
-                            <p class="text-danger">Gagal memuat foto album</p>
-                        </div>
-                    `;
-                }
-            } catch (e) {
-                console.error('Error parsing response:', e);
-                document.getElementById('albumPhotosContainer').innerHTML = `
-                    <div class="col-12 text-center py-4">
-                        <p class="text-danger">Terjadi kesalahan saat memuat foto</p>
-                    </div>
-                `;
+    xhrRequest(url, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(async response => {
+        const data = await response.json();
+        if (response.ok && data.success) {
+            albumPhotosData = data.data;
+            renderAlbumPhotos(data.data);
+            
+            // Set judul and kategori if not set
+            if (!document.getElementById('edit_judul').value && data.judul) {
+                document.getElementById('edit_judul').value = data.judul;
+            }
+            if (!document.getElementById('edit_kategori_id').value && data.kategori_id) {
+                document.getElementById('edit_kategori_id').value = data.kategori_id;
             }
         } else {
             document.getElementById('albumPhotosContainer').innerHTML = `
                 <div class="col-12 text-center py-4">
-                    <p class="text-danger">Gagal memuat foto album (HTTP ${xhr.status})</p>
+                    <p class="text-danger">Gagal memuat foto album: ${data.message || 'Unknown error'}</p>
                 </div>
             `;
         }
-    };
-    
-    xhr.onerror = function() {
-        console.error('Error loading album photos: Network error');
+    })
+    .catch(error => {
+        console.error('Error loading album photos:', error);
         document.getElementById('albumPhotosContainer').innerHTML = `
             <div class="col-12 text-center py-4">
-                <p class="text-danger">Terjadi kesalahan saat memuat foto</p>
+                <p class="text-danger">Error loading album photos: ${error.message || 'Network error'}</p>
             </div>
         `;
-    };
-    
-    xhr.send();
+    });
 }
 
 // Render album photos with checkboxes

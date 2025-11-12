@@ -16,12 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'web.auth' => \App\Http\Middleware\WebAuthMiddleware::class,
         ]);
         
-        // Enable CORS middleware for API and admin routes
+        // Enable CORS middleware for API routes
         $middleware->api(prepend: [
             \App\Http\Middleware\CorsMiddleware::class,
         ]);
         
-        $middleware->web(append: [
+        // Enable CORS middleware for web routes (BEFORE other middleware to handle preflight)
+        $middleware->web(prepend: [
             \App\Http\Middleware\CorsMiddleware::class,
         ]);
     })
