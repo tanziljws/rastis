@@ -372,19 +372,35 @@ function hideAlert(el) {
 
 // Load categories
 function loadCategories() {
-    fetch('{{ route("admin.api.categories") }}')
+    // Use absolute URL to avoid CORS issues
+    const url = '{{ url("/admin/api/categories") }}';
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin',
+        mode: 'same-origin'
+    })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                return response.text().then(text => {
+                    throw new Error(`HTTP ${response.status}: ${text}`);
+                });
             }
             return response.json();
         })
         .then(data => {
             const select = document.getElementById('kategori_id');
-            if (select && data && data.data) {
+            if (select && data && data.data && Array.isArray(data.data)) {
                 select.innerHTML = '<option value="">Pilih Kategori</option>';
                 data.data.forEach(kategori => {
-                    select.innerHTML += `<option value="${kategori.id}">${kategori.judul}</option>`;
+                    if (kategori && kategori.id && kategori.judul) {
+                        select.innerHTML += `<option value="${kategori.id}">${kategori.judul}</option>`;
+                    }
                 });
             } else {
                 console.error('Invalid response format:', data);
@@ -398,7 +414,7 @@ function loadCategories() {
             console.error('Error loading categories:', error);
             const select = document.getElementById('kategori_id');
             if (select) {
-                select.innerHTML = '<option value="">Error memuat kategori</option>';
+                select.innerHTML = '<option value="">Error memuat kategori. Silakan refresh halaman.</option>';
             }
         });
 }
