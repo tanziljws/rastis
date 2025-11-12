@@ -247,39 +247,7 @@
                 <div class="sidebar">
                     <div class="p-3 text-center">
                         <div class="mb-3">
-                            <div class="school-logo">
-                                <div class="shield">
-                                    <div class="shield-header">SMK NEGERI 4</div>
-                                    <div class="shield-wings">
-                                        <div class="wing left-wing">
-                                            <div class="wing-lines">
-                                                <div class="wing-line"></div>
-                                                <div class="wing-line"></div>
-                                                <div class="wing-line"></div>
-                                            </div>
-                                        </div>
-                                        <div class="shield-center">
-                                            <div class="center-emblem">
-                                                <div class="flag-red"></div>
-                                                <div class="flag-white"></div>
-                                                <div class="flag-element"></div>
-                                            </div>
-                                        </div>
-                                        <div class="wing right-wing">
-                                            <div class="wing-lines">
-                                                <div class="wing-line"></div>
-                                                <div class="wing-line"></div>
-                                                <div class="wing-line"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="shield-anchor">
-                                        <div class="anchor-ring"></div>
-                                        <div class="anchor-arms"></div>
-                                    </div>
-                                    <div class="shield-footer">KOTA BOGOR</div>
-                                </div>
-                            </div>
+                            <img src="{{ asset('images/logo-smkn4-bogor.jpg') }}" alt="SMK NEGERI 4 KOTA BOGOR" class="img-fluid" style="max-height: 100px; width: auto;">
                         </div>
                         <h5 class="text-white mb-1">SMK NEGERI 4 BOGOR</h5>
                         <small class="text-white-50">Admin Dashboard</small>

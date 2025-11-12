@@ -610,9 +610,9 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('home') }}">
-                <i class="fas fa-school me-2"></i>
-                Sekolah Galeri
+            <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
+                <img src="{{ asset('images/logo-smkn4-bogor.jpg') }}" alt="SMK NEGERI 4 KOTA BOGOR" class="me-2" style="height: 40px; width: auto;">
+                <span>Sekolah Galeri</span>
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -625,9 +625,6 @@
                         <a class="nav-link" href="{{ route('home') }}">Beranda</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#profil">Profil</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('agenda.index') }}">Agenda</a>
                     </li>
                     <li class="nav-item">
@@ -635,9 +632,6 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('galeri.index') }}">Galeri</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.login') }}">Admin</a>
                     </li>
                     </ul>
                 </div>
