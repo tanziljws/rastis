@@ -159,7 +159,12 @@ class FotoController extends Controller
      */
     public function create()
     {
-        return view('admin.tambah-foto');
+        // Get all categories for dropdown
+        $kategoris = \Illuminate\Support\Facades\Cache::remember('kategoris_list', 3600, function () {
+            return \App\Models\Kategori::orderBy('judul')->get();
+        });
+        
+        return view('admin.tambah-foto', compact('kategoris'));
     }
 
     /**

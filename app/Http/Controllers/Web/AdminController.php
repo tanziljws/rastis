@@ -95,7 +95,9 @@ class AdminController extends Controller
                     'judul' => $kategori->judul
                 ];
             })
-        ]);
+        ])->header('Access-Control-Allow-Origin', '*')
+          ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+          ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
     }
 
     // Agenda Management Methods

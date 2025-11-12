@@ -37,6 +37,11 @@
                         </label>
                         <select class="form-control-modern" id="kategori_id" name="kategori_id" required>
                             <option value="">Pilih Kategori</option>
+                            @if(isset($kategoris) && $kategoris->count() > 0)
+                                @foreach($kategoris as $kategori)
+                                    <option value="{{ $kategori->id }}">{{ $kategori->judul }}</option>
+                                @endforeach
+                            @endif
                         </select>
                         <small class="form-text-modern">Pilih kategori untuk mengorganisir foto</small>
                     </div>
@@ -370,9 +375,16 @@ function hideAlert(el) {
     el.innerHTML = '';
 }
 
-// Load categories
+// Load categories (fallback if not loaded from server)
 function loadCategories() {
-    // Use absolute URL to avoid CORS issues
+    // Check if categories are already loaded from server
+    const select = document.getElementById('kategori_id');
+    if (select && select.options.length > 1) {
+        // Categories already loaded from server, skip fetch
+        return;
+    }
+    
+    // Fallback: Try to load via API if not already loaded
     const url = '{{ url("/admin/api/categories") }}';
     
     fetch(url, {
@@ -394,27 +406,22 @@ function loadCategories() {
             return response.json();
         })
         .then(data => {
-            const select = document.getElementById('kategori_id');
             if (select && data && data.data && Array.isArray(data.data)) {
-                select.innerHTML = '<option value="">Pilih Kategori</option>';
-                data.data.forEach(kategori => {
-                    if (kategori && kategori.id && kategori.judul) {
-                        select.innerHTML += `<option value="${kategori.id}">${kategori.judul}</option>`;
-                    }
-                });
-            } else {
-                console.error('Invalid response format:', data);
-                const select = document.getElementById('kategori_id');
-                if (select) {
-                    select.innerHTML = '<option value="">Error memuat kategori</option>';
+                // Only update if select is empty (no categories from server)
+                if (select.options.length <= 1) {
+                    select.innerHTML = '<option value="">Pilih Kategori</option>';
+                    data.data.forEach(kategori => {
+                        if (kategori && kategori.id && kategori.judul) {
+                            select.innerHTML += `<option value="${kategori.id}">${kategori.judul}</option>`;
+                        }
+                    });
                 }
             }
         })
         .catch(error => {
-            console.error('Error loading categories:', error);
-            const select = document.getElementById('kategori_id');
-            if (select) {
-                select.innerHTML = '<option value="">Error memuat kategori. Silakan refresh halaman.</option>';
+            // Silently fail if categories already loaded from server
+            if (select && select.options.length <= 1) {
+                console.error('Error loading categories:', error);
             }
         });
 }
