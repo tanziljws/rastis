@@ -611,23 +611,69 @@ document.getElementById('uploadFotoForm').addEventListener('submit', async funct
             console.log('CSRF Token:', token ? 'Found' : 'Missing');
             console.log('File:', file.name, file.size, 'bytes');
             
-            // Create fetch request with proper error handling
-            const response = await fetch(uploadUrl, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                    // Don't set Content-Type - browser will set it automatically with boundary for FormData
-                },
-                credentials: 'same-origin',
-                body: formData,
-                // Add redirect handling
-                redirect: 'follow'
+            // Use XMLHttpRequest as it handles redirects and cookies better than fetch
+            const response = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                
+                xhr.open('POST', uploadUrl, true);
+                xhr.setRequestHeader('X-CSRF-TOKEN', token);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                
+                xhr.withCredentials = true; // Important for sending cookies
+                
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const json = JSON.parse(xhr.responseText);
+                            resolve({
+                                ok: true,
+                                status: xhr.status,
+                                json: async () => json,
+                                text: async () => xhr.responseText
+                            });
+                        } catch (e) {
+                            resolve({
+                                ok: false,
+                                status: xhr.status,
+                                json: async () => ({ success: false, message: xhr.responseText }),
+                                text: async () => xhr.responseText
+                            });
+                        }
+                    } else {
+                        try {
+                            const json = JSON.parse(xhr.responseText);
+                            resolve({
+                                ok: false,
+                                status: xhr.status,
+                                json: async () => json,
+                                text: async () => xhr.responseText
+                            });
+                        } catch (e) {
+                            resolve({
+                                ok: false,
+                                status: xhr.status,
+                                json: async () => ({ success: false, message: xhr.responseText }),
+                                text: async () => xhr.responseText
+                            });
+                        }
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    reject(new Error('Network error: Failed to send request'));
+                };
+                
+                xhr.ontimeout = function() {
+                    reject(new Error('Request timeout'));
+                };
+                
+                xhr.timeout = 60000; // 60 seconds timeout
+                
+                xhr.send(formData);
             });
             
             console.log('Response status:', response.status);
-            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
             
             // Handle 401 Unauthorized
             if (response.status === 401) {
@@ -646,7 +692,7 @@ document.getElementById('uploadFotoForm').addEventListener('submit', async funct
                     const json = await response.json();
                     errorMessage = json.message || json.error || 'Upload gagal';
                 } catch (e) {
-                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    errorMessage = `HTTP ${response.status}: Upload gagal`;
                 }
                 errorCount++;
                 updateProgress(i, 100, false, errorMessage);
