@@ -12,39 +12,96 @@ return new class extends Migration
     public function up(): void
     {
         // Add indexes to foto table
+        // Note: batch_id index already exists from migration 2025_11_11_153143_add_batch_id_to_foto_table.php
         Schema::table('foto', function (Blueprint $table) {
-            $table->index('judul');
-            $table->index('kategori_id');
-            $table->index('galery_id');
-            $table->index('created_at');
-            $table->index('batch_id');
+            try {
+                $table->index('judul');
+            } catch (\Exception $e) {
+                // Index already exists, skip
+            }
+            try {
+                $table->index('kategori_id');
+            } catch (\Exception $e) {
+                // Index already exists, skip
+            }
+            try {
+                $table->index('galery_id');
+            } catch (\Exception $e) {
+                // Index already exists, skip
+            }
+            try {
+                $table->index('created_at');
+            } catch (\Exception $e) {
+                // Index already exists, skip
+            }
+            // batch_id index already created in previous migration, skip it
         });
 
         // Add indexes to likes table
         Schema::table('likes', function (Blueprint $table) {
-            $table->index('foto_id');
-            $table->index('user_id');
+            try {
+                $table->index('foto_id');
+            } catch (\Exception $e) {
+                // Index already exists, skip
+            }
+            try {
+                $table->index('user_id');
+            } catch (\Exception $e) {
+                // Index already exists, skip
+            }
         });
 
         // Add indexes to comments table
         Schema::table('comments', function (Blueprint $table) {
-            $table->index('foto_id');
-            $table->index('user_id');
-            $table->index('created_at');
+            try {
+                $table->index('foto_id');
+            } catch (\Exception $e) {
+                // Index already exists, skip
+            }
+            try {
+                $table->index('user_id');
+            } catch (\Exception $e) {
+                // Index already exists, skip
+            }
+            try {
+                $table->index('created_at');
+            } catch (\Exception $e) {
+                // Index already exists, skip
+            }
         });
 
         // Add indexes to galery table
         Schema::table('galery', function (Blueprint $table) {
-            $table->index('status');
-            $table->index('post_id');
+            try {
+                $table->index('status');
+            } catch (\Exception $e) {
+                // Index already exists, skip
+            }
+            try {
+                $table->index('post_id');
+            } catch (\Exception $e) {
+                // Index already exists, skip
+            }
         });
 
         // Add indexes to posts table (if exists)
         if (Schema::hasTable('posts')) {
             Schema::table('posts', function (Blueprint $table) {
-                $table->index('status');
-                $table->index('kategori_id');
-                $table->index('created_at');
+                try {
+                    $table->index('status');
+                } catch (\Exception $e) {
+                    // Index already exists, skip
+                }
+                try {
+                    $table->index('kategori_id');
+                } catch (\Exception $e) {
+                    // Index already exists, skip
+                }
+                try {
+                    $table->index('created_at');
+                } catch (\Exception $e) {
+                    // Index already exists, skip
+                }
             });
         }
     }
@@ -55,11 +112,27 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('foto', function (Blueprint $table) {
-            $table->dropIndex(['judul']);
-            $table->dropIndex(['kategori_id']);
-            $table->dropIndex(['galery_id']);
-            $table->dropIndex(['created_at']);
-            $table->dropIndex(['batch_id']);
+            try {
+                $table->dropIndex(['judul']);
+            } catch (\Exception $e) {
+                // Index doesn't exist, skip
+            }
+            try {
+                $table->dropIndex(['kategori_id']);
+            } catch (\Exception $e) {
+                // Index doesn't exist, skip
+            }
+            try {
+                $table->dropIndex(['galery_id']);
+            } catch (\Exception $e) {
+                // Index doesn't exist, skip
+            }
+            try {
+                $table->dropIndex(['created_at']);
+            } catch (\Exception $e) {
+                // Index doesn't exist, skip
+            }
+            // batch_id index is managed by its own migration, don't drop it here
         });
 
         Schema::table('likes', function (Blueprint $table) {
