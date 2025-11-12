@@ -15,6 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'web.auth' => \App\Http\Middleware\WebAuthMiddleware::class,
         ]);
+        
+        // Enable CORS middleware for API and admin routes
+        $middleware->api(prepend: [
+            \App\Http\Middleware\CorsMiddleware::class,
+        ]);
+        
+        $middleware->web(append: [
+            \App\Http\Middleware\CorsMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

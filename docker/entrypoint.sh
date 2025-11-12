@@ -6,11 +6,18 @@ echo "🚀 Starting Laravel application..."
 # Generate app key if not exists
 php artisan key:generate --force || true
 
-# Create storage link (remove existing if it's a directory)
-if [ -d public/storage ]; then
+# Create storage link (remove existing if it's a directory or broken symlink)
+if [ -d public/storage ] || [ -L public/storage ]; then
     rm -rf public/storage
 fi
+# Create symbolic link
 php artisan storage:link || true
+
+# Verify storage link was created
+if [ ! -L public/storage ]; then
+    echo "⚠️  Warning: storage:link failed, trying manual link..."
+    ln -sfn ../storage/app/public public/storage || true
+fi
 
 # Ensure storage directories exist and have correct permissions
 mkdir -p storage/app/public/fotos
