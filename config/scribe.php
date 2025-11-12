@@ -51,7 +51,7 @@ return [
     INTRO,
 
     // The base URL displayed in the docs.
-    'base_url' => config("app.url"),
+    'base_url' => env('APP_URL', 'http://localhost'),
 
     // Routes to include in the docs
     'routes' => [
@@ -77,7 +77,8 @@ return [
 
     'laravel' => [
         // Only add routes in development (Scribe is dev dependency)
-        'add_routes' => app()->environment('local', 'testing'),
+        // Use env() directly instead of app()->environment() to avoid service container issues
+        'add_routes' => in_array(env('APP_ENV', 'production'), ['local', 'testing']),
 
         'docs_url' => '/docs',
         'assets_directory' => null,
@@ -169,7 +170,7 @@ return [
         'responseFields' => [],
     ],
 
-    'database_connections_to_transact' => [config('database.default')],
+    'database_connections_to_transact' => [env('DB_CONNECTION', 'mysql')],
 
     'fractal' => [
         'serializer' => null,
