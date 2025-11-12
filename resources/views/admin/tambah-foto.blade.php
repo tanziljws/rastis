@@ -27,7 +27,9 @@
         <p class="text-muted mb-0 small">Upload satu atau banyak foto sekaligus</p>
     </div>
     <div class="card-body p-4">
-        <form id="uploadFotoForm" enctype="multipart/form-data">
+        <form id="uploadFotoForm" action="{{ route('admin.fotos.store') }}" method="POST" enctype="multipart/form-data" target="uploadFrame">
+            @csrf
+            <iframe name="uploadFrame" id="uploadFrame" style="display: none;"></iframe>
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="form-group-modern">

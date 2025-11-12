@@ -164,7 +164,8 @@ class FotoController extends Controller
             return \App\Models\Kategori::orderBy('judul')->get();
         });
         
-        return view('admin.tambah-foto', compact('kategoris'));
+        // Use simple form to avoid access control issues
+        return view('admin.tambah-foto-simple', compact('kategoris'));
     }
 
     /**
