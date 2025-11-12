@@ -134,7 +134,9 @@
             @if($albumsPaginated->hasPages())
                 <div class="row mt-5">
                     <div class="col-12 d-flex justify-content-center">
-                        {{ $albumsPaginated->appends(request()->query())->links() }}
+                        <div class="custom-pagination">
+                            {{ $albumsPaginated->appends(request()->query())->links() }}
+                        </div>
                     </div>
                 </div>
             @endif
@@ -305,6 +307,67 @@
     opacity: 0.5;
 }
 
+/* Custom Pagination */
+.custom-pagination {
+    width: 100%;
+    max-width: 600px;
+}
+
+.custom-pagination .pagination {
+    justify-content: center;
+    margin: 0;
+    gap: 0.5rem;
+}
+
+.custom-pagination .pagination .page-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+    background: white;
+    transition: all 0.2s ease;
+    min-width: 40px;
+    text-align: center;
+}
+
+.custom-pagination .pagination .page-link:hover {
+    background: #f3f4f6;
+    border-color: #2563eb;
+    color: #2563eb;
+    transform: translateY(-2px);
+}
+
+.custom-pagination .pagination .page-item.active .page-link {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: white;
+    font-weight: 600;
+}
+
+.custom-pagination .pagination .page-item.disabled .page-link {
+    background: #f9fafb;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.custom-pagination .pagination .page-item.disabled .page-link:hover {
+    transform: none;
+    background: #f9fafb;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+}
+
+/* Make pagination icons smaller */
+.custom-pagination .pagination .page-link svg,
+.custom-pagination .pagination .page-link i {
+    font-size: 0.75rem;
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .gallery-hero h1 {
@@ -313,6 +376,16 @@
     
     .album-thumbnail-wrapper {
         padding-top: 100%; /* Square on mobile */
+    }
+    
+    .custom-pagination .pagination {
+        gap: 0.25rem;
+    }
+    
+    .custom-pagination .pagination .page-link {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        min-width: 36px;
     }
 }
 </style>

@@ -100,4 +100,7 @@ Route::middleware(['web.auth'])->prefix('admin')->name('admin.')->group(function
 Route::middleware(['web.auth'])->prefix('admin')->group(function () {
     Route::get('/api/galeries', [AdminController::class, 'getGaleries'])->name('admin.api.galeries');
     Route::get('/api/categories', [AdminController::class, 'getCategories'])->name('admin.api.categories');
+    Route::get('/api/fotos/{foto}/album', [FotoController::class, 'getAlbumPhotos'])->name('admin.api.fotos.album');
+    Route::post('/api/fotos/bulk-delete', [FotoController::class, 'bulkDelete'])->name('admin.api.fotos.bulk-delete');
+    Route::post('/api/fotos/{foto}/add-photos', [FotoController::class, 'addPhotosToAlbum'])->name('admin.api.fotos.add-photos');
 });

@@ -290,14 +290,19 @@ class FotoController extends Controller
 
     /**
      * Update the specified resource in storage.
+     * If judul is changed, update all photos with the same original judul.
      */
     public function update(Request $request, Foto $foto)
     {
         $validated = $request->validate([
             'kategori_id' => 'required|exists:kategori,id',
-            'file' => 'nullable|file|mimes:jpeg,jpg,png|max:2048',
+            'file' => 'nullable|file|mimes:jpeg,jpg,png|max:5120',
             'judul' => 'nullable|string|max:255',
+            'judul_original' => 'nullable|string|max:255', // Original judul to find all photos in album
         ]);
+
+        $originalJudul = $validated['judul_original'] ?? $foto->judul;
+        $newJudul = $validated['judul'] ?? $foto->judul;
 
         // Handle file upload if new file is provided
         if ($request->hasFile('file')) {
@@ -316,7 +321,25 @@ class FotoController extends Controller
             }
         }
 
+        // Update this photo
         $foto->update($validated);
+
+        // If judul changed and original judul exists, update all photos in the same album
+        if ($originalJudul && $newJudul !== $originalJudul) {
+            Foto::where('judul', $originalJudul)
+                ->where('id', '!=', $foto->id)
+                ->update([
+                    'judul' => $newJudul,
+                    'kategori_id' => $validated['kategori_id']
+                ]);
+        } elseif ($originalJudul && $newJudul === $originalJudul) {
+            // If judul unchanged but kategori changed, update all photos in album
+            Foto::where('judul', $originalJudul)
+                ->where('id', '!=', $foto->id)
+                ->update([
+                    'kategori_id' => $validated['kategori_id']
+                ]);
+        }
 
         if (request()->expectsJson()) {
             return response()->json([
@@ -349,5 +372,120 @@ class FotoController extends Controller
         }
 
         return redirect()->back()->with('success', 'Foto berhasil dihapus!');
+    }
+
+    /**
+     * Get all photos in the same album (same judul)
+     */
+    public function getAlbumPhotos(Foto $foto)
+    {
+        $judul = $foto->judul;
+        
+        if (empty($judul)) {
+            // Single photo, return only this photo
+            $photos = collect([$foto]);
+        } else {
+            // Get all photos with same judul
+            $photos = Foto::where('judul', $judul)
+                ->with('kategori')
+                ->orderBy('created_at', 'asc')
+                ->get();
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $photos->map(function($photo) {
+                return [
+                    'id' => $photo->id,
+                    'file_url' => $photo->file_url,
+                    'thumbnail_url' => $photo->thumbnail_url,
+                    'judul' => $photo->judul,
+                    'kategori_id' => $photo->kategori_id,
+                    'kategori' => $photo->kategori ? $photo->kategori->judul : null,
+                    'created_at' => $photo->created_at->format('d M Y'),
+                ];
+            }),
+            'judul' => $judul,
+            'kategori_id' => $foto->kategori_id,
+        ]);
+    }
+
+    /**
+     * Bulk delete photos
+     */
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'photo_ids' => 'required|array|min:1',
+            'photo_ids.*' => 'required|exists:foto,id',
+        ]);
+
+        $deleted = 0;
+        foreach ($validated['photo_ids'] as $photoId) {
+            $photo = Foto::find($photoId);
+            if ($photo) {
+                if ($photo->file) {
+                    ImageService::deleteImage($photo->file);
+                }
+                $photo->delete();
+                $deleted++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$deleted} foto berhasil dihapus!",
+            'deleted_count' => $deleted
+        ]);
+    }
+
+    /**
+     * Add new photos to existing album
+     */
+    public function addPhotosToAlbum(Request $request, Foto $foto)
+    {
+        $validated = $request->validate([
+            'files' => 'required|array|min:1',
+            'files.*' => 'required|file|mimes:jpeg,jpg,png|max:5120',
+            'judul' => 'nullable|string|max:255',
+            'kategori_id' => 'required|exists:kategori,id',
+        ]);
+
+        $judul = $validated['judul'] ?? $foto->judul;
+        $kategoriId = $validated['kategori_id'] ?? $foto->kategori_id;
+        $batchId = $foto->batch_id ?? uniqid('batch_', true);
+
+        $created = [];
+        foreach ($request->file('files') as $file) {
+            try {
+                $imagePaths = ImageService::processImage($file, 'fotos', 1920, 85);
+                $path = $imagePaths['original'];
+                $thumbnailPath = $imagePaths['thumbnail'];
+            } catch (\Exception $e) {
+                $path = $file->store('fotos', 'public');
+                $thumbnailPath = null;
+            }
+
+            $newFoto = Foto::create([
+                'galery_id' => $foto->galery_id,
+                'kategori_id' => $kategoriId,
+                'file' => $path,
+                'thumbnail' => $thumbnailPath,
+                'judul' => $judul,
+                'batch_id' => $batchId,
+            ]);
+
+            $created[] = [
+                'id' => $newFoto->id,
+                'file_url' => $newFoto->file_url,
+                'thumbnail_url' => $newFoto->thumbnail_url,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => count($created) . ' foto berhasil ditambahkan!',
+            'data' => $created
+        ]);
     }
 }
