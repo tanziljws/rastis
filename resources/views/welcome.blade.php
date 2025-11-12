@@ -673,22 +673,13 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero-section" id="beranda">
-        @if(isset($heroBackground) && $heroBackground)
-            <img src="{{ $heroBackground }}" 
-                 alt="SMK NEGERI 4 KOTA BOGOR" 
-                 class="hero-background-image loading"
-                 loading="lazy"
-                 onload="this.classList.add('loaded')"
-                 onerror="this.style.display='none'">
-        @else
-            <img src="{{ asset('images/school-background.jpg') }}" 
-                 alt="SMK NEGERI 4 KOTA BOGOR" 
-                 class="hero-background-image loading"
-                 loading="lazy"
-                 onload="this.classList.add('loaded')"
-                 onerror="this.style.display='none'">
-        @endif
+            <section class="hero-section" id="beranda">
+                <img src="{{ $heroBackground ?? asset('images/hero-default.jpg') }}" 
+                     alt="SMK NEGERI 4 KOTA BOGOR" 
+                     class="hero-background-image loading"
+                     loading="lazy"
+                     onload="this.classList.add('loaded')"
+                     onerror="this.src='{{ asset('images/hero-default.jpg') }}'; this.classList.add('loaded');">
         <div class="hero-content">
             
             <!-- Main Title -->
@@ -729,7 +720,7 @@
                                         <i class="fas fa-school me-2"></i>
                                         Tentang Sekolah
                                     </h3>
-                                    <p class="card-text mb-0" style="line-height: 1.8; font-size: 1.05rem;">
+                                    <p class="card-text mb-0 text-start" style="line-height: 1.8; font-size: 1.05rem;">
                                         {{ isset($profil) && $profil->deskripsi ? $profil->deskripsi : 'SMK Negeri 4 Kota Bogor adalah sekolah menengah kejuruan yang berkomitmen untuk mencetak generasi unggul, berkarakter, dan siap kerja. Dengan fasilitas modern dan tenaga pengajar profesional, kami mempersiapkan siswa untuk menghadapi tantangan dunia industri.' }}
                                     </p>
                                 </div>
@@ -773,10 +764,12 @@
                             <div class="row">
                                 <!-- Visi -->
                                 <div class="col-lg-6 pe-lg-4 position-relative">
-                                    <div class="text-center h-100 d-flex flex-column justify-content-center">
-                                        <i class="fas fa-eye fa-3x text-primary mb-3"></i>
-                                        <h4 class="card-title mb-3">Visi</h4>
-                                        <p class="card-text mb-0" style="line-height: 1.8; white-space: pre-line;">{{ isset($profil) && $profil->visi ? $profil->visi : 'Menjadi SMK unggul yang menghasilkan lulusan berkarakter, kompeten, dan berdaya saing global.' }}</p>
+                                    <div class="h-100 d-flex flex-column justify-content-center">
+                                        <div class="text-center mb-3">
+                                            <i class="fas fa-eye fa-3x text-primary mb-3"></i>
+                                            <h4 class="card-title mb-3">Visi</h4>
+                                        </div>
+                                        <p class="card-text mb-0 text-start" style="line-height: 1.8; white-space: pre-line;">{{ isset($profil) && $profil->visi ? $profil->visi : 'Menjadi SMK unggul yang menghasilkan lulusan berkarakter, kompeten, dan berdaya saing global.' }}</p>
                                     </div>
                                     <!-- Divider -->
                                     <div class="d-lg-block d-none position-absolute top-0 end-0 h-100" style="width: 1px; background: #dee2e6; transform: translateX(50%);"></div>
@@ -784,10 +777,12 @@
                                 
                                 <!-- Misi -->
                                 <div class="col-lg-6 ps-lg-4 mt-4 mt-lg-0">
-                                    <div class="text-center h-100 d-flex flex-column justify-content-center">
-                                        <i class="fas fa-bullseye fa-3x text-primary mb-3"></i>
-                                        <h4 class="card-title mb-3">Misi</h4>
-                                        <p class="card-text mb-0" style="line-height: 1.8; white-space: pre-line;">{{ isset($profil) && $profil->misi ? $profil->misi : '1. Menyelenggarakan pendidikan yang berkualitas dan berwawasan global
+                                    <div class="h-100 d-flex flex-column justify-content-center">
+                                        <div class="text-center mb-3">
+                                            <i class="fas fa-bullseye fa-3x text-primary mb-3"></i>
+                                            <h4 class="card-title mb-3">Misi</h4>
+                                        </div>
+                                        <p class="card-text mb-0 text-start" style="line-height: 1.8; white-space: pre-line;">{{ isset($profil) && $profil->misi ? $profil->misi : '1. Menyelenggarakan pendidikan yang berkualitas dan berwawasan global
 2. Mengembangkan potensi siswa secara optimal melalui kegiatan akademik dan non-akademik
 3. Menanamkan nilai-nilai karakter dan akhlak mulia
 4. Mewujudkan lingkungan sekolah yang nyaman, aman, dan kondusif

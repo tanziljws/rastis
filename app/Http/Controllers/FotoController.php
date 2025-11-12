@@ -394,6 +394,13 @@ class FotoController extends Controller
      */
     public function destroy(Foto $foto)
     {
+        // Ensure we return JSON for AJAX requests
+        $isAjax = request()->expectsJson() || 
+                 request()->ajax() || 
+                 request()->wantsJson() ||
+                 request()->header('X-Requested-With') === 'XMLHttpRequest' ||
+                 request()->header('Accept') === 'application/json';
+        
         // Delete physical file and thumbnail if exists
         if ($foto->file) {
             ImageService::deleteImage($foto->file);
@@ -401,11 +408,15 @@ class FotoController extends Controller
 
         $foto->delete();
 
-        if (request()->expectsJson()) {
+        if ($isAjax) {
             return response()->json([
                 'success' => true,
                 'message' => 'Foto berhasil dihapus!'
-            ]);
+            ], 200)
+            ->header('Content-Type', 'application/json')
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
         }
 
         return redirect()->back()->with('success', 'Foto berhasil dihapus!');
@@ -444,7 +455,11 @@ class FotoController extends Controller
             }),
             'judul' => $judul,
             'kategori_id' => $foto->kategori_id,
-        ]);
+        ], 200)
+        ->header('Content-Type', 'application/json')
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
     }
 
     /**
@@ -473,7 +488,11 @@ class FotoController extends Controller
             'success' => true,
             'message' => "{$deleted} foto berhasil dihapus!",
             'deleted_count' => $deleted
-        ]);
+        ], 200)
+        ->header('Content-Type', 'application/json')
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
     }
 
     /**
@@ -523,6 +542,10 @@ class FotoController extends Controller
             'success' => true,
             'message' => count($created) . ' foto berhasil ditambahkan!',
             'data' => $created
-        ]);
+        ], 200)
+        ->header('Content-Type', 'application/json')
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
     }
 }

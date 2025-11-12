@@ -136,15 +136,18 @@ class AdminController extends Controller
             return Kategori::orderBy('judul')->get();
         });
         return response()->json([
+            'success' => true,
             'data' => $categories->map(function($kategori) {
                 return [
                     'id' => $kategori->id,
                     'judul' => $kategori->judul
                 ];
             })
-        ])->header('Access-Control-Allow-Origin', '*')
-          ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-          ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
+        ], 200)
+        ->header('Content-Type', 'application/json')
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
     }
 
     // Agenda Management Methods

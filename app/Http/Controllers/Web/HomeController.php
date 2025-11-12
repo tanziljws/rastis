@@ -31,7 +31,7 @@ class HomeController extends Controller
             ]);
         }
         
-        // Load hero background
+        // Load hero background - use default if not set
         $heroBackground = null;
         if ($profil && $profil->hero_background) {
             $path = $profil->hero_background;
@@ -39,6 +39,9 @@ class HomeController extends Controller
                 $path = 'storage/' . $path;
             }
             $heroBackground = asset($path);
+        } else {
+            // Use default hero image
+            $heroBackground = asset('images/hero-default.jpg');
         }
         
         // Load photos directly with optimized query

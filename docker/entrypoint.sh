@@ -29,11 +29,23 @@ find storage/app/public -type d -exec chmod 755 {} \;
 chmod -R 775 storage/app/public/fotos
 chmod -R 775 storage/app/public/fotos/thumbnails
 
+# Fix permissions for all existing files in fotos directory
+if [ -d storage/app/public/fotos ]; then
+    find storage/app/public/fotos -type f -exec chmod 644 {} \; 2>/dev/null || true
+    find storage/app/public/fotos -type d -exec chmod 755 {} \; 2>/dev/null || true
+fi
+
 # Ensure public/storage has correct permissions
 if [ -L public/storage ]; then
     chmod -R 755 public/storage
-    find public/storage -type f -exec chmod 644 {} \;
-    find public/storage -type d -exec chmod 755 {} \;
+    find public/storage -type f -exec chmod 644 {} \; 2>/dev/null || true
+    find public/storage -type d -exec chmod 755 {} \; 2>/dev/null || true
+    
+    # Fix permissions for fotos in public/storage
+    if [ -d public/storage/fotos ]; then
+        find public/storage/fotos -type f -exec chmod 644 {} \; 2>/dev/null || true
+        find public/storage/fotos -type d -exec chmod 755 {} \; 2>/dev/null || true
+    fi
 fi
 
 # Create .htaccess in public/storage if it doesn't exist (for Apache)
@@ -55,6 +67,9 @@ fi
 
 # Run migrations
 php artisan migrate --force || true
+
+# Fix photo permissions (run after migrations to ensure all files are accessible)
+php artisan fotos:fix-permissions || true
 
 # Cache configuration
 php artisan config:cache || true
