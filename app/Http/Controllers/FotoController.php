@@ -212,9 +212,21 @@ class FotoController extends Controller
                 $imagePaths = ImageService::processImage($file, 'fotos', 1920, 85);
                 $path = $imagePaths['original'];
                 $thumbnailPath = $imagePaths['thumbnail'];
+                
+                // Ensure file permissions are correct
+                if ($thumbnailPath && Storage::disk('public')->exists($thumbnailPath)) {
+                    chmod(Storage::disk('public')->path($thumbnailPath), 0644);
+                }
+                if (Storage::disk('public')->exists($path)) {
+                    chmod(Storage::disk('public')->path($path), 0644);
+                }
             } catch (\Exception $e) {
                 // Fallback to regular upload if image processing fails
                 $path = $file->store('fotos', 'public');
+                // Ensure file permissions are correct
+                if (Storage::disk('public')->exists($path)) {
+                    chmod(Storage::disk('public')->path($path), 0644);
+                }
                 $thumbnailPath = null;
             }
 

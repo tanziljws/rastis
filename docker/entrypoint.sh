@@ -16,6 +16,7 @@ php artisan storage:link || true
 mkdir -p storage/app/public/fotos
 mkdir -p storage/app/public/fotos/thumbnails
 mkdir -p storage/app/public/hero-backgrounds
+mkdir -p storage/app/public/logos
 chmod -R 775 storage
 chmod -R 775 bootstrap/cache
 
@@ -23,6 +24,10 @@ chmod -R 775 bootstrap/cache
 chmod -R 755 storage/app/public
 find storage/app/public -type f -exec chmod 644 {} \;
 find storage/app/public -type d -exec chmod 755 {} \;
+
+# Ensure fotos directory is writable
+chmod -R 775 storage/app/public/fotos
+chmod -R 775 storage/app/public/fotos/thumbnails
 
 # Ensure public/storage has correct permissions
 if [ -L public/storage ]; then

@@ -64,6 +64,7 @@ Route::middleware(['web.auth'])->prefix('admin')->name('admin.')->group(function
     Route::get('/kategori', [AdminController::class, 'kategori'])->name('kategori');
     Route::get('/posts', [AdminController::class, 'posts'])->name('posts');
     Route::get('/profiles', [AdminController::class, 'profiles'])->name('profiles');
+    Route::post('/profiles/update', [AdminController::class, 'profilesUpdate'])->name('profiles.update');
     
     // Agenda management routes
     Route::get('/agenda', [AdminController::class, 'agenda'])->name('agenda');

@@ -65,8 +65,81 @@ class AdminController extends Controller
 
     public function profiles()
     {
-        $profiles = Profile::orderBy('created_at', 'desc')->paginate(10);
-        return view('admin.profiles', compact('profiles'));
+        // Get or create Profil (single record for school profile)
+        $profil = Profil::first();
+        if (!$profil) {
+            // Create default profil if doesn't exist
+            $profil = Profil::create([
+                'nama_sekolah' => 'SMKN 4 Kota Bogor',
+                'deskripsi' => 'SMK Negeri 4 Kota Bogor adalah sekolah menengah kejuruan yang berkomitmen untuk mencetak generasi unggul, berkarakter, dan siap kerja.',
+                'alamat' => 'Jl. Raya Tajur, Kp. Buntar RT.02/RW.08, Kel. Muara sari, Kec. Bogor Selatan, Kota Bogor, Jawa Barat 16137',
+                'telepon' => null,
+                'email' => null,
+                'website' => null,
+                'visi' => 'Menjadi SMK unggul yang menghasilkan lulusan berkarakter, kompeten, dan berdaya saing global.',
+                'misi' => '1. Menyelenggarakan pendidikan yang berkualitas dan berwawasan global
+2. Mengembangkan potensi siswa secara optimal melalui kegiatan akademik dan non-akademik
+3. Menanamkan nilai-nilai karakter dan akhlak mulia
+4. Mewujudkan lingkungan sekolah yang nyaman, aman, dan kondusif
+5. Mengembangkan kerjasama dengan berbagai pihak untuk meningkatkan kualitas pendidikan',
+                'sejarah' => null
+            ]);
+        }
+        return view('admin.profiles', compact('profil'));
+    }
+    
+    public function profilesUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_sekolah' => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'alamat' => 'required|string|max:500',
+            'telepon' => 'nullable|string|max:50',
+            'email' => 'nullable|email|max:255',
+            'website' => 'nullable|url|max:255',
+            'visi' => 'nullable|string',
+            'misi' => 'nullable|string',
+            'sejarah' => 'nullable|string',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        $profil = Profil::first();
+        
+        if (!$profil) {
+            $profil = new Profil();
+        }
+
+        // Handle logo upload
+        if ($request->hasFile('logo')) {
+            // Delete old logo if exists
+            if ($profil->logo && Storage::disk('public')->exists($profil->logo)) {
+                Storage::disk('public')->delete($profil->logo);
+            }
+
+            // Store new logo
+            $path = $request->file('logo')->store('logos', 'public');
+            $profil->logo = $path;
+            
+            // Ensure file permissions
+            if (Storage::disk('public')->exists($path)) {
+                chmod(Storage::disk('public')->path($path), 0644);
+            }
+        }
+
+        // Update other fields
+        $profil->nama_sekolah = $validated['nama_sekolah'];
+        $profil->deskripsi = $validated['deskripsi'];
+        $profil->alamat = $validated['alamat'];
+        $profil->telepon = $validated['telepon'] ?? null;
+        $profil->email = $validated['email'] ?? null;
+        $profil->website = $validated['website'] ?? null;
+        $profil->visi = $validated['visi'] ?? null;
+        $profil->misi = $validated['misi'] ?? null;
+        $profil->sejarah = $validated['sejarah'] ?? null;
+        
+        $profil->save();
+
+        return redirect()->route('admin.profiles')->with('success', 'Profil sekolah berhasil diperbarui!');
     }
 
     public function getGaleries()

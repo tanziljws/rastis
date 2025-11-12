@@ -13,35 +13,47 @@ class HomeController extends Controller
 {
     public function index()
     {
-        // Load data directly from database to prevent API call issues and flickering
-        $profile = Profile::first();
-        
-        // Load profil for hero background
+        // Load profil sekolah (integrated with admin profile management)
         $profil = Profil::first();
+        
+        // If no profil exists, create default
+        if (!$profil) {
+            $profil = Profil::create([
+                'nama_sekolah' => 'SMKN 4 Kota Bogor',
+                'deskripsi' => 'SMK Negeri 4 Kota Bogor adalah sekolah menengah kejuruan yang berkomitmen untuk mencetak generasi unggul, berkarakter, dan siap kerja.',
+                'alamat' => 'Jl. Raya Tajur, Kp. Buntar RT.02/RW.08, Kel. Muara sari, Kec. Bogor Selatan, Kota Bogor, Jawa Barat 16137',
+                'visi' => 'Menjadi SMK unggul yang menghasilkan lulusan berkarakter, kompeten, dan berdaya saing global.',
+                'misi' => '1. Menyelenggarakan pendidikan yang berkualitas dan berwawasan global
+2. Mengembangkan potensi siswa secara optimal melalui kegiatan akademik dan non-akademik
+3. Menanamkan nilai-nilai karakter dan akhlak mulia
+4. Mewujudkan lingkungan sekolah yang nyaman, aman, dan kondusif
+5. Mengembangkan kerjasama dengan berbagai pihak untuk meningkatkan kualitas pendidikan',
+            ]);
+        }
+        
+        // Load hero background
         $heroBackground = null;
         if ($profil && $profil->hero_background) {
-            // Ensure the path is correct for public access
             $path = $profil->hero_background;
-            // If path doesn't start with storage/, add it
             if (!str_starts_with($path, 'storage/')) {
                 $path = 'storage/' . $path;
             }
             $heroBackground = asset($path);
         }
         
-        // Load photos directly with optimized query (no file_exists checks - use accessor)
+        // Load photos directly with optimized query
         $photos = \App\Models\Foto::with(['galery.post', 'kategori'])
             ->where(function($q) {
                 $q->whereHas('galery', function($subQ) {
                     $subQ->where('status', 'active');
-                })->orWhereNull('galery_id'); // Include standalone photos
+                })->orWhereNull('galery_id');
             })
             ->orderBy('created_at', 'desc')
             ->take(8)
             ->get();
 
         return view('welcome', [
-            'profile' => $profile,
+            'profil' => $profil,
             'photos' => $photos,
             'heroBackground' => $heroBackground,
         ]);
