@@ -577,27 +577,102 @@ function hideAlert(el) {
     el.innerHTML = '';
 }
 
+// Helper function for XMLHttpRequest (to avoid access control issues)
+function xhrRequest(url, options = {}) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const method = options.method || 'GET';
+        const headers = options.headers || {};
+        const body = options.body;
+        
+        xhr.open(method, url, true);
+        xhr.withCredentials = true;
+        
+        // Set headers
+        Object.keys(headers).forEach(key => {
+            xhr.setRequestHeader(key, headers[key]);
+        });
+        
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const json = JSON.parse(xhr.responseText);
+                    resolve({
+                        ok: true,
+                        status: xhr.status,
+                        json: async () => json,
+                        text: async () => xhr.responseText
+                    });
+                } catch (e) {
+                    resolve({
+                        ok: true,
+                        status: xhr.status,
+                        json: async () => ({ success: false, message: xhr.responseText }),
+                        text: async () => xhr.responseText
+                    });
+                }
+            } else {
+                try {
+                    const json = JSON.parse(xhr.responseText);
+                    resolve({
+                        ok: false,
+                        status: xhr.status,
+                        json: async () => json,
+                        text: async () => xhr.responseText
+                    });
+                } catch (e) {
+                    resolve({
+                        ok: false,
+                        status: xhr.status,
+                        json: async () => ({ success: false, message: xhr.responseText }),
+                        text: async () => xhr.responseText
+                    });
+                }
+            }
+        };
+        
+        xhr.onerror = function() {
+            reject(new Error('Network error'));
+        };
+        
+        xhr.ontimeout = function() {
+            reject(new Error('Request timeout'));
+        };
+        
+        xhr.timeout = 60000;
+        xhr.send(body);
+    });
+}
+
 // Load categories for select dropdowns
 function loadCategories() {
-    return fetch('{{ route("admin.api.categories") }}')
-        .then(response => response.json())
-        .then(data => {
-            const select = document.getElementById('edit_kategori_id');
-            if (select) {
-                select.innerHTML = '<option value="">Pilih Kategori</option>';
+    return xhrRequest('{{ route("admin.api.categories") }}', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(async response => {
+        const data = await response.json();
+        const select = document.getElementById('edit_kategori_id');
+        if (select) {
+            select.innerHTML = '<option value="">Pilih Kategori</option>';
+            if (data.data && Array.isArray(data.data)) {
                 data.data.forEach(kategori => {
                     select.innerHTML += `<option value="${kategori.id}">${kategori.judul}</option>`;
                 });
             }
-            return data;
-        })
-        .catch(() => {
-            const select = document.getElementById('edit_kategori_id');
-            if (select) {
-                select.innerHTML = '<option value="">Pilih Kategori</option>';
-            }
-            return { data: [] };
-        });
+        }
+        return data;
+    })
+    .catch(() => {
+        const select = document.getElementById('edit_kategori_id');
+        if (select) {
+            select.innerHTML = '<option value="">Pilih Kategori</option>';
+        }
+        return { data: [] };
+    });
 }
 
 // Edit foto - Load album photos
@@ -643,38 +718,65 @@ function editFoto(id, judul, kategori_id) {
     new bootstrap.Modal(document.getElementById('editFotoModal')).show();
 }
 
-// Load album photos
+// Load album photos using XMLHttpRequest to avoid access control issues
 function loadAlbumPhotos(fotoId) {
-    fetch(`{{ route("admin.api.fotos.album", ":id") }}`.replace(':id', fotoId))
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                albumPhotosData = data.data;
-                renderAlbumPhotos(data.data);
-                
-                // Set judul and kategori if not set
-                if (!document.getElementById('edit_judul').value && data.judul) {
-                    document.getElementById('edit_judul').value = data.judul;
+    const url = `{{ route("admin.api.fotos.album", ":id") }}`.replace(':id', fotoId);
+    const xhr = new XMLHttpRequest();
+    
+    xhr.open('GET', url, true);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.withCredentials = true;
+    
+    xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                if (data.success) {
+                    albumPhotosData = data.data;
+                    renderAlbumPhotos(data.data);
+                    
+                    // Set judul and kategori if not set
+                    if (!document.getElementById('edit_judul').value && data.judul) {
+                        document.getElementById('edit_judul').value = data.judul;
+                    }
+                    if (!document.getElementById('edit_kategori_id').value && data.kategori_id) {
+                        document.getElementById('edit_kategori_id').value = data.kategori_id;
+                    }
+                } else {
+                    document.getElementById('albumPhotosContainer').innerHTML = `
+                        <div class="col-12 text-center py-4">
+                            <p class="text-danger">Gagal memuat foto album</p>
+                        </div>
+                    `;
                 }
-                if (!document.getElementById('edit_kategori_id').value && data.kategori_id) {
-                    document.getElementById('edit_kategori_id').value = data.kategori_id;
-                }
-            } else {
+            } catch (e) {
+                console.error('Error parsing response:', e);
                 document.getElementById('albumPhotosContainer').innerHTML = `
                     <div class="col-12 text-center py-4">
-                        <p class="text-danger">Gagal memuat foto album</p>
+                        <p class="text-danger">Terjadi kesalahan saat memuat foto</p>
                     </div>
                 `;
             }
-        })
-        .catch(error => {
-            console.error('Error loading album photos:', error);
+        } else {
             document.getElementById('albumPhotosContainer').innerHTML = `
                 <div class="col-12 text-center py-4">
-                    <p class="text-danger">Terjadi kesalahan saat memuat foto</p>
+                    <p class="text-danger">Gagal memuat foto album (HTTP ${xhr.status})</p>
                 </div>
             `;
-        });
+        }
+    };
+    
+    xhr.onerror = function() {
+        console.error('Error loading album photos: Network error');
+        document.getElementById('albumPhotosContainer').innerHTML = `
+            <div class="col-12 text-center py-4">
+                <p class="text-danger">Terjadi kesalahan saat memuat foto</p>
+            </div>
+        `;
+    };
+    
+    xhr.send();
 }
 
 // Render album photos with checkboxes
@@ -745,17 +847,20 @@ document.getElementById('deleteSelectedBtn')?.addEventListener('click', function
         return;
     }
     
-    fetch('{{ route("admin.api.fotos.bulk-delete") }}', {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    xhrRequest('{{ route("admin.api.fotos.bulk-delete") }}', {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-CSRF-TOKEN': csrfToken,
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({ photo_ids: selectedPhotoIds })
     })
-    .then(response => response.json())
-    .then(data => {
+    .then(async response => {
+        const data = await response.json();
         if (data.success) {
             showAlert(document.getElementById('editFotoAlert'), 'success', data.message);
             // Reload album photos
@@ -849,12 +954,15 @@ document.getElementById('editFotoForm').addEventListener('submit', function(e) {
     formData.append('judul', judul);
     formData.append('judul_original', originalJudul); // Send original judul for album update
     
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
     updatePromises.push(
-        fetch(`{{ route("admin.fotos.update", ":id") }}`.replace(':id', fotoId), {
+        xhrRequest(`{{ route("admin.fotos.update", ":id") }}`.replace(':id', fotoId), {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: formData
         })
@@ -870,11 +978,12 @@ document.getElementById('editFotoForm').addEventListener('submit', function(e) {
         addFormData.append('kategori_id', kategoriId);
         
         updatePromises.push(
-            fetch(`{{ route("admin.api.fotos.add-photos", ":id") }}`.replace(':id', fotoId), {
+            xhrRequest(`{{ route("admin.api.fotos.add-photos", ":id") }}`.replace(':id', fotoId), {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: addFormData
             })
@@ -884,7 +993,13 @@ document.getElementById('editFotoForm').addEventListener('submit', function(e) {
     // Execute all updates
     Promise.all(updatePromises)
         .then(async responses => {
-            const results = await Promise.all(responses.map(r => r.json().catch(() => ({}))));
+            const results = await Promise.all(responses.map(async r => {
+                try {
+                    return await r.json();
+                } catch (e) {
+                    return { success: false, message: 'Error parsing response' };
+                }
+            }));
             const allSuccess = results.every(r => r.success !== false);
             
             if (allSuccess) {
@@ -909,24 +1024,27 @@ document.getElementById('editFotoForm').addEventListener('submit', function(e) {
 function deleteFoto(id) {
     if (!confirm('Apakah Anda yakin ingin menghapus foto ini?')) return;
     
-        fetch(`{{ route("admin.fotos.destroy", ":id") }}`.replace(':id', id), {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
-            }
-        })
-        .then(async response => {
-            const json = await response.json().catch(() => ({}));
-            if (response.ok && json.success) {
-                showAlert(document.getElementById('fotoAlert'), 'success', 'Foto berhasil dihapus. Memuat ulang...');
-                setTimeout(() => location.reload(), 600);
-            } else {
-                const msg = json.message || 'Error menghapus foto';
-                showAlert(document.getElementById('fotoAlert'), 'danger', msg);
-            }
-        })
-        .catch(() => showAlert(document.getElementById('fotoAlert'), 'danger', 'Terjadi kesalahan jaringan.'));
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    xhrRequest(`{{ route("admin.fotos.destroy", ":id") }}`.replace(':id', id), {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(async response => {
+        const json = await response.json().catch(() => ({}));
+        if (response.ok && json.success) {
+            showAlert(document.getElementById('fotoAlert'), 'success', 'Foto berhasil dihapus. Memuat ulang...');
+            setTimeout(() => location.reload(), 600);
+        } else {
+            const msg = json.message || 'Error menghapus foto';
+            showAlert(document.getElementById('fotoAlert'), 'danger', msg);
+        }
+    })
+    .catch(() => showAlert(document.getElementById('fotoAlert'), 'danger', 'Terjadi kesalahan jaringan.'));
 }
 
 // Initialize on page load
