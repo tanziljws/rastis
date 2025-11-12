@@ -373,20 +373,32 @@ function hideAlert(el) {
 // Load categories
 function loadCategories() {
     fetch('{{ route("admin.api.categories") }}')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             const select = document.getElementById('kategori_id');
-            if (select) {
+            if (select && data && data.data) {
                 select.innerHTML = '<option value="">Pilih Kategori</option>';
                 data.data.forEach(kategori => {
                     select.innerHTML += `<option value="${kategori.id}">${kategori.judul}</option>`;
                 });
+            } else {
+                console.error('Invalid response format:', data);
+                const select = document.getElementById('kategori_id');
+                if (select) {
+                    select.innerHTML = '<option value="">Error memuat kategori</option>';
+                }
             }
         })
-        .catch(() => {
+        .catch(error => {
+            console.error('Error loading categories:', error);
             const select = document.getElementById('kategori_id');
             if (select) {
-                select.innerHTML = '<option value="">Pilih Kategori</option>';
+                select.innerHTML = '<option value="">Error memuat kategori</option>';
             }
         });
 }

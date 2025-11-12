@@ -19,6 +19,35 @@ mkdir -p storage/app/public/hero-backgrounds
 chmod -R 775 storage
 chmod -R 775 bootstrap/cache
 
+# Fix permissions for storage/app/public and all subdirectories
+chmod -R 755 storage/app/public
+find storage/app/public -type f -exec chmod 644 {} \;
+find storage/app/public -type d -exec chmod 755 {} \;
+
+# Ensure public/storage has correct permissions
+if [ -L public/storage ]; then
+    chmod -R 755 public/storage
+    find public/storage -type f -exec chmod 644 {} \;
+    find public/storage -type d -exec chmod 755 {} \;
+fi
+
+# Create .htaccess in public/storage if it doesn't exist (for Apache)
+if [ ! -f public/storage/.htaccess ]; then
+    cat > public/storage/.htaccess << 'EOF'
+# Allow access to all files in storage
+<IfModule mod_rewrite.c>
+    RewriteEngine Off
+</IfModule>
+
+# Allow access to all file types
+<FilesMatch ".*">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+EOF
+    chmod 644 public/storage/.htaccess
+fi
+
 # Run migrations
 php artisan migrate --force || true
 
