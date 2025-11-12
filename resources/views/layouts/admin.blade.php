@@ -247,7 +247,7 @@
                 <div class="sidebar">
                     <div class="p-3 text-center">
                         <div class="mb-3">
-                            <img src="{{ asset('images/logo-smkn4-bogor.jpg') }}" alt="SMK NEGERI 4 KOTA BOGOR" class="img-fluid" style="max-height: 100px; width: auto;">
+                            <img src="{{ asset('images/logo-smkn4-bogor.png') }}" alt="SMK NEGERI 4 KOTA BOGOR" class="img-fluid" style="max-height: 100px; width: auto;">
                         </div>
                         <h5 class="text-white mb-1">SMK NEGERI 4 BOGOR</h5>
                         <small class="text-white-50">Admin Dashboard</small>
