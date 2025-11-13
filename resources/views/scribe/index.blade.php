@@ -26,7 +26,7 @@
             </style>
 
     <script>
-        var tryItOutBaseUrl = "http://localhost";
+        var tryItOutBaseUrl = "{{ config('app.url') }}";
         var useCsrf = Boolean();
         var csrfUrl = "/sanctum/csrf-cookie";
     </script>
@@ -71,7 +71,7 @@
     <ul class="toc-footer" id="toc-footer">
                     <li style="padding-bottom: 5px;"><a href="{{ route("scribe.postman") }}">View Postman collection</a></li>
                             <li style="padding-bottom: 5px;"><a href="{{ route("scribe.openapi") }}">View OpenAPI spec</a></li>
-                <li><a href="http://github.com/knuckleswtf/scribe">Documentation powered by Scribe ✍</a></li>
+                <li><a href="https://github.com/knuckleswtf/scribe" target="_blank" rel="noopener noreferrer">Documentation powered by Scribe ✍</a></li>
     </ul>
 
     <ul class="toc-footer" id="last-updated">
@@ -85,7 +85,7 @@
         <h1 id="introduction">Introduction</h1>
 <p>REST API untuk sistem galeri sekolah dengan autentikasi Laravel Sanctum. API ini menyediakan endpoint untuk manajemen kategori, posts, galery, foto, dan profile.</p>
 <aside>
-    <strong>Base URL</strong>: <code>http://localhost</code>
+    <strong>Base URL</strong>: <code>{{ config('app.url') }}</code>
 </aside>
 <pre><code>This documentation aims to provide all the information you need to work with our API.
 
