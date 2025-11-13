@@ -21,28 +21,33 @@
 <!-- Filter & Search Section -->
 <section class="py-4 bg-light border-bottom">
     <div class="container">
-        <div class="row g-3 align-items-end">
-            <div class="col-md-5">
-                <label for="searchInput" class="form-label fw-semibold">
-                    <i class="fas fa-search me-2"></i>Cari Foto
-                </label>
-                <input type="text" 
-                       class="form-control form-control-lg" 
-                       id="searchInput" 
-                       placeholder="Cari berdasarkan judul foto...">
-            </div>
-            <div class="col-md-4">
-                <label for="filterKategori" class="form-label fw-semibold">
-                    <i class="fas fa-filter me-2"></i>Kategori
-                </label>
-                <select class="form-select form-select-lg" id="filterKategori">
+        <form method="GET" action="{{ route('admin.fotos') }}" id="filterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="search" class="form-label fw-semibold">
+                        <i class="fas fa-search me-2"></i>Cari Foto
+                    </label>
+                    <input type="text" 
+                           class="form-control form-control-lg" 
+                           id="search" 
+                           name="search"
+                           placeholder="Cari berdasarkan judul foto..."
+                           value="{{ request('search') }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="kategori" class="form-label fw-semibold">
+                        <i class="fas fa-filter me-2"></i>Kategori
+                    </label>
+                    <select class="form-select form-select-lg" id="kategori" name="kategori">
                         <option value="">Semua Kategori</option>
                         @foreach($kategoris ?? [] as $kategori)
-                        <option value="{{ $kategori->id }}">{{ $kategori->judul }}</option>
+                            <option value="{{ $kategori->id }}" {{ request('kategori') == $kategori->id ? 'selected' : '' }}>
+                                {{ $kategori->judul }}
+                            </option>
                         @endforeach
                     </select>
-            </div>
-            <div class="col-md-3">
+                </div>
+                <div class="col-md-3">
                 <label for="sortSelect" class="form-label fw-semibold">
                     <i class="fas fa-sort me-2"></i>Urutkan
                 </label>
@@ -54,20 +59,26 @@
                     </select>
                 </div>
             </div>
-        <div class="row mt-3">
-            <div class="col-12 d-flex justify-content-between align-items-center">
-                <div>
-                    <button class="btn btn-primary btn-lg" id="applyFilter">
-                        <i class="fas fa-filter me-2"></i>Terapkan Filter
-                </button>
+            <div class="row mt-3">
+                <div class="col-12 d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-filter me-2"></i>Terapkan Filter
+                        </button>
+                        @if(request('search') || request('kategori'))
+                            <a href="{{ route('admin.fotos') }}" class="btn btn-outline-secondary btn-lg ms-2">
+                                <i class="fas fa-times me-2"></i>Reset
+                            </a>
+                        @endif
+                    </div>
+                    <div>
+                        <a href="{{ route('admin.fotos.create') }}" class="btn btn-success btn-lg">
+                            <i class="fas fa-plus me-2"></i>Tambah Foto
+                        </a>
+                    </div>
+                </div>
             </div>
-    <div>
-                    <a href="{{ route('admin.fotos.create') }}" class="btn btn-success btn-lg">
-                        <i class="fas fa-plus me-2"></i>Tambah Foto
-                    </a>
-    </div>
-</div>
-        </div>
+        </form>
     </div>
 </section>
 
@@ -77,72 +88,77 @@
 <!-- Alerts -->
 <div id="fotoAlert" class="alert d-none" role="alert"></div>
 
-        @if($fotos->count() > 0)
+        @if($albumsPaginated->count() > 0)
             <!-- Gallery Stats -->
             <div class="row mb-4">
                 <div class="col-12">
                     <p class="text-muted mb-0">
-                        Menampilkan <strong>{{ $fotos->firstItem() }}</strong> - <strong>{{ $fotos->lastItem() }}</strong> 
-                        dari <strong>{{ $fotos->total() }}</strong> foto
+                        Menampilkan <strong>{{ $albumsPaginated->firstItem() }}</strong> - <strong>{{ $albumsPaginated->lastItem() }}</strong> 
+                        dari <strong>{{ $albumsPaginated->total() }}</strong> album
                     </p>
                 </div>
             </div>
             
-            <!-- Gallery Grid -->
+            <!-- Album Grid -->
             <div class="row g-4" id="gallery-grid">
-                @foreach($fotos as $foto)
+                @foreach($albumsPaginated as $album)
                     <div class="col-6 col-md-4 col-lg-3" 
-                         data-title="{{ strtolower($foto->judul ?? '') }}" 
-                         data-kategori="{{ $foto->kategori_id ?? '' }}" 
-                         data-created="{{ $foto->created_at->timestamp }}">
-                        <div class="album-card h-100">
+                         data-title="{{ strtolower($album['judul'] === 'photo_' . $album['first_foto']->id ? '' : $album['judul']) }}" 
+                         data-kategori="{{ $album['kategori'] ? $album['kategori']->id : '' }}" 
+                         data-created="{{ $album['created_at']->timestamp }}">
+                        <div class="album-card h-100" onclick="editFoto({{ $album['first_foto']->id }}, '{{ addslashes($album['judul'] === 'photo_' . $album['first_foto']->id ? '' : $album['judul']) }}', {{ $album['kategori'] ? $album['kategori']->id : 'null' }})">
                             <div class="album-thumbnail-wrapper">
-                                @php
-                                    $imageUrl = '';
-                                    $thumbnailUrl = '';
-                                    if ($foto->thumbnail && Storage::disk('public')->exists($foto->thumbnail)) {
-                                        $thumbnailUrl = asset('storage/' . $foto->thumbnail);
-                                    }
-                                    if (str_contains($foto->file, '/')) {
-                                        $imageUrl = asset('storage/' . $foto->file);
-                                    } else {
-                                        $imageUrl = asset('storage/fotos/' . $foto->file);
-                                    }
-                                    if (!$thumbnailUrl) {
-                                        $thumbnailUrl = $imageUrl;
-                                    }
-                                @endphp
-                                <img src="{{ $thumbnailUrl }}" 
-                                     alt="{{ $foto->judul ?? 'Foto Sekolah' }}"
+                                <img src="{{ $album['first_foto']->thumbnail_url }}" 
+                                     alt="{{ $album['judul'] === 'photo_' . $album['first_foto']->id ? 'Tanpa Judul' : $album['judul'] }}"
                                      class="album-thumbnail"
                                      loading="lazy"
-                                     data-src="{{ $imageUrl }}"
+                                     data-src="{{ $album['first_foto']->file_url }}"
                                      onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect fill=\'%232563eb\' width=\'400\' height=\'300\'/%3E%3Ctext fill=\'%23ffffff\' font-family=\'Arial\' font-size=\'16\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\'%3EGambar Tidak Ditemukan%3C/text%3E%3C/svg%3E';">
                                 <div class="album-overlay">
                                     <div class="album-overlay-content">
                                         <div class="admin-actions-overlay">
                                             <button class="btn btn-sm btn-light mb-2" 
-                                                    onclick="editFoto({{ $foto->id }}, '{{ addslashes($foto->judul ?? '') }}', {{ $foto->kategori_id ?? 'null' }})"
-                                                    title="Edit Foto">
+                                                    onclick="event.stopPropagation(); editFoto({{ $album['first_foto']->id }}, '{{ addslashes($album['judul'] === 'photo_' . $album['first_foto']->id ? '' : $album['judul']) }}', {{ $album['kategori'] ? $album['kategori']->id : 'null' }})"
+                                                    title="Edit Album">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
                                             <button class="btn btn-sm btn-danger" 
-                                                    onclick="deleteFoto({{ $foto->id }})"
-                                                    title="Hapus Foto">
+                                                    onclick="event.stopPropagation(); deleteFoto({{ $album['first_foto']->id }})"
+                                                    title="Hapus Album">
                                                 <i class="fas fa-trash"></i> Hapus
                                             </button>
                                         </div>
                                     </div>
                                 </div>
+                                <!-- Photo Count Badge -->
+                                <div class="album-count-badge">
+                                    <i class="fas fa-images me-1"></i>
+                                    {{ $album['count'] }} Foto
+                                </div>
                             </div>
+                            
+                            <!-- Album Info -->
                             <div class="album-card-body">
-                                <h5 class="album-title">{{ $foto->judul ?? 'Foto Sekolah' }}</h5>
-                                @if($foto->kategori)
-                                    <span class="badge bg-primary mb-2">{{ $foto->kategori->judul }}</span>
+                                <h5 class="album-title">{{ $album['judul'] === 'photo_' . $album['first_foto']->id ? 'Tanpa Judul' : $album['judul'] }}</h5>
+                                @if($album['kategori'])
+                                    <span class="badge bg-primary mb-2">{{ $album['kategori']->judul }}</span>
                                 @endif
+                                
+                                <!-- Like & Comment Counters -->
+                                <div class="album-stats mb-2">
+                                    <span class="album-stat-item">
+                                        <i class="fas fa-heart text-danger me-1"></i>
+                                        <small>{{ $album['total_likes'] ?? 0 }}</small>
+                                    </span>
+                                    <span class="album-stat-item ms-3">
+                                        <i class="fas fa-comment text-primary me-1"></i>
+                                        <small>{{ $album['total_comments'] ?? 0 }}</small>
+                                    </span>
+                                </div>
+                                
                                 <p class="album-date text-muted mb-0">
                                     <i class="far fa-calendar-alt me-1"></i>
-                                    {{ $foto->created_at->format('d M Y') }}
+                                    {{ $album['created_at']->format('d M Y') }}
                                 </p>
                             </div>
                         </div>
@@ -150,29 +166,41 @@
                 @endforeach
             </div>
 
-<!-- Pagination -->
-@if($fotos->hasPages())
-            <div class="row mt-5">
-                <div class="col-12 d-flex justify-content-center">
-                    <div class="simple-pagination">
-                        {{ $fotos->appends(request()->query())->links() }}
+            <!-- Pagination -->
+            @if($albumsPaginated->hasPages())
+                <div class="row mt-5">
+                    <div class="col-12 d-flex justify-content-center">
+                        <div class="simple-pagination">
+                            {{ $albumsPaginated->appends(request()->query())->links() }}
+                        </div>
                     </div>
                 </div>
-            </div>
-        @endif
+            @endif
         @else
             <!-- Empty State -->
             <div class="text-center py-5">
                 <div class="empty-state-icon mb-4">
                     <i class="fas fa-images fa-5x text-muted"></i>
                 </div>
-                <h3 class="text-muted mb-3">Belum Ada Foto</h3>
-                <p class="text-muted mb-4">Mulai dengan menambahkan foto baru ke galeri</p>
-                <a href="{{ route('admin.fotos.create') }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-plus me-2"></i>Tambah Foto Pertama
-                </a>
-    </div>
-@endif
+                <h3 class="text-muted mb-3">Belum Ada Album</h3>
+                <p class="text-muted mb-4">
+                    @if(request('search') || request('kategori'))
+                        Tidak ada album yang sesuai dengan filter yang Anda pilih.
+                    @else
+                        Mulai dengan menambahkan foto baru ke galeri
+                    @endif
+                </p>
+                @if(request('search') || request('kategori'))
+                    <a href="{{ route('admin.fotos') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Kembali ke Semua Album
+                    </a>
+                @else
+                    <a href="{{ route('admin.fotos.create') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Tambah Foto Pertama
+                    </a>
+                @endif
+            </div>
+        @endif
 </div>
 </section>
 
@@ -398,6 +426,34 @@
     text-align: center;
 }
 
+.album-count-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(37, 99, 235, 0.95);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    z-index: 2;
+}
+
+.album-stats {
+    display: flex;
+    align-items: center;
+}
+
+.album-stat-item {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
 /* Empty State */
 .empty-state-icon {
     opacity: 0.5;
@@ -563,52 +619,8 @@
 </style>
 
 <script>
-// Toolbar interactions
-const searchInput = document.getElementById('searchInput');
-const filterKategori = document.getElementById('filterKategori');
-const sortSelect = document.getElementById('sortSelect');
-const grid = document.querySelector('#gallery-grid');
-const applyFilterBtn = document.getElementById('applyFilter');
-
-function applyFilters() {
-    if (!grid) return;
-    
-    const term = (searchInput?.value || '').toLowerCase();
-    const kategori = filterKategori?.value || '';
-    const items = Array.from(grid.querySelectorAll('.col-6, .col-md-4, .col-lg-3'));
-
-    items.forEach(item => {
-        const title = item.dataset.title || '';
-        const kategoriId = item.dataset.kategori || '';
-        
-        const matchTitle = !term || title.includes(term);
-        const matchKategori = !kategori || kategoriId === kategori;
-        
-        item.style.display = (matchTitle && matchKategori) ? '' : 'none';
-    });
-
-    // Sort visible items
-    const visible = items.filter(i => i.style.display !== 'none');
-    visible.sort((a,b) => {
-        const s = sortSelect?.value || 'newest';
-        const aTitle = a.dataset.title || '';
-        const bTitle = b.dataset.title || '';
-        const aDate = parseInt(a.dataset.created) || 0;
-        const bDate = parseInt(b.dataset.created) || 0;
-        
-        if (s === 'newest') return bDate - aDate;
-        if (s === 'oldest') return aDate - bDate;
-        if (s === 'title_asc') return aTitle.localeCompare(bTitle);
-        if (s === 'title_desc') return bTitle.localeCompare(aTitle);
-        return 0;
-    });
-    visible.forEach(el => grid.appendChild(el));
-}
-
-if (searchInput) searchInput.addEventListener('input', applyFilters);
-if (filterKategori) filterKategori.addEventListener('change', applyFilters);
-if (sortSelect) sortSelect.addEventListener('change', applyFilters);
-if (applyFilterBtn) applyFilterBtn.addEventListener('click', applyFilters);
+// Filter form will submit to server for proper filtering
+// Server-side filtering and pagination is used for better performance
 
 function showAlert(el, type, message) {
     if (!el) return;

@@ -51,16 +51,76 @@ class AdminController extends Controller
         return view('admin.galeries', compact('galeries'));
     }
 
-    public function fotos()
+    public function fotos(Request $request)
     {
-        $fotos = Foto::with(['galery.post', 'kategori'])
+        $query = Foto::with(['galery.post', 'kategori', 'likes', 'comments']);
+        
+        // Filter by kategori
+        if ($request->has('kategori') && $request->kategori) {
+            $query->where('kategori_id', $request->kategori);
+        }
+        
+        // Search by judul
+        if ($request->has('search') && $request->search) {
+            $query->where('judul', 'like', '%' . $request->search . '%');
+        }
+        
+        // Get all photos (with or without galery)
+        $fotos = $query->where(function($q) {
+                $q->whereHas('galery', function($subQ) {
+                    $subQ->where('status', 'active');
+                })->orWhereNull('galery_id'); // Include standalone photos
+            })
             ->orderBy('created_at', 'desc')
-            ->paginate(12);
+            ->get(); // Get all, not paginated, because we'll group by judul
+        
+        // Group photos by judul (album system) - Same as user gallery
+        $albums = $fotos->groupBy(function($foto) {
+            $judul = $foto->judul ?? '';
+            if (empty($judul)) {
+                // If no judul, each photo is its own album
+                return 'photo_' . $foto->id;
+            }
+            return $judul;
+        })->map(function($group, $judul) {
+            // For album-based like/comment, use first photo as representative
+            $firstFoto = $group->first();
+            
+            return [
+                'judul' => $judul,
+                'fotos' => $group,
+                'count' => $group->count(),
+                'first_foto' => $firstFoto,
+                'kategori' => $firstFoto->kategori,
+                'created_at' => $firstFoto->created_at,
+                // Like & comment count from representative photo (first photo)
+                'total_likes' => $firstFoto->likes->count(),
+                'total_comments' => $firstFoto->comments->count(),
+            ];
+        })->sortByDesc(function($album) {
+            return $album['created_at'];
+        });
+        
+        // Paginate albums (not individual photos)
+        $perPage = 12;
+        $currentPage = $request->get('page', 1);
+        $items = $albums->values();
+        $total = $items->count();
+        $items = $items->slice(($currentPage - 1) * $perPage, $perPage);
+        $albumsPaginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+        
         // Cache kategori list for 1 hour
         $kategoris = \Illuminate\Support\Facades\Cache::remember('kategoris_list', 3600, function () {
             return Kategori::orderBy('judul')->get();
         });
-        return view('admin.fotos', compact('fotos', 'kategoris'));
+        
+        return view('admin.fotos', compact('albumsPaginated', 'kategoris'));
     }
 
     public function profiles()
