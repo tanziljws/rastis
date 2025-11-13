@@ -18,11 +18,25 @@ class ImageService
      */
     public static function processImage($file, $folder = 'fotos', $maxWidth = 1920, $quality = 85)
     {
+        // Set time limit for image processing
+        set_time_limit(60); // 1 minute for processing
+        ini_set('memory_limit', '256M');
+        
         $originalPath = $file->store($folder, 'public');
         $fullPath = storage_path('app/public/' . $originalPath);
         
         // Process image
         try {
+            // Check file size before processing
+            $fileSize = filesize($fullPath);
+            if ($fileSize > 10 * 1024 * 1024) { // 10MB
+                \Log::warning('Large file detected, skipping processing', ['size' => $fileSize]);
+                return [
+                    'original' => $originalPath,
+                    'thumbnail' => null
+                ];
+            }
+            
             $image = Image::read($fullPath);
             
             // Resize if larger than maxWidth
@@ -77,6 +91,19 @@ class ImageService
     public static function generateThumbnail($imagePath, $folder = 'fotos', $size = 400)
     {
         try {
+            // Check if file exists and is readable
+            if (!file_exists($imagePath) || !is_readable($imagePath)) {
+                \Log::warning('Thumbnail generation skipped: file not accessible', ['path' => $imagePath]);
+                return null;
+            }
+            
+            // Skip thumbnail for very large files
+            $fileSize = filesize($imagePath);
+            if ($fileSize > 10 * 1024 * 1024) { // 10MB
+                \Log::info('Thumbnail generation skipped for large file', ['size' => $fileSize]);
+                return null;
+            }
+            
             $image = Image::read($imagePath);
             
             // Resize to square thumbnail (cover crop)

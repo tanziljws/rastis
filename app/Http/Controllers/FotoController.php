@@ -173,6 +173,10 @@ class FotoController extends Controller
      */
     public function store(Request $request)
     {
+        // Increase time limit for image processing
+        set_time_limit(120); // 2 minutes
+        ini_set('memory_limit', '256M');
+        
         try {
             // Ensure we return JSON for AJAX requests
             $isAjax = $request->expectsJson() || 
@@ -181,17 +185,140 @@ class FotoController extends Controller
                      $request->header('X-Requested-With') === 'XMLHttpRequest' ||
                      $request->header('Accept') === 'application/json';
             
-            $validated = $request->validate([
+            // Check if multiple files or single file
+            $isMultiple = $request->hasFile('files');
+            
+            $rules = [
                 'kategori_id' => 'required|exists:kategori,id',
-                'file' => 'required|file|mimes:jpeg,jpg,png|max:5120', // 5MB max
                 'judul' => 'nullable|string|max:255',
                 'batch_id' => 'nullable|string|max:255',
-            ]);
+            ];
+            
+            if ($isMultiple) {
+                $rules['files'] = 'required|array|min:1|max:20'; // Max 20 files at once
+                $rules['files.*'] = 'required|file|mimes:jpeg,jpg,png,webp|max:10240'; // 10MB per file
+            } else {
+                $rules['file'] = 'required|file|mimes:jpeg,jpg,png,webp|max:10240'; // 10MB max
+            }
+            
+            $validated = $request->validate($rules);
 
             // For standalone photos, we don't need a galery_id (it will be nullable)
             $galery = Galery::where('status', 'active')->first();
-
-            // Check if file is present and valid
+            
+            // Use batch_id from request if provided (for bulk upload grouping)
+            $batchId = $validated['batch_id'] ?? uniqid('batch_', true);
+            $judul = $validated['judul'] ?? null;
+            $kategoriId = $validated['kategori_id'];
+            
+            $created = [];
+            $errors = [];
+            
+            // Handle multiple files
+            if ($isMultiple && $request->hasFile('files')) {
+                $files = $request->file('files');
+                
+                foreach ($files as $index => $file) {
+                    try {
+                        // Check if file upload was successful
+                        if (!$file->isValid()) {
+                            $errors[] = "File #{$index}: " . $file->getError();
+                            continue;
+                        }
+                        
+                        // Process and compress image with timeout protection
+                        $path = null;
+                        $thumbnailPath = null;
+                        
+                        try {
+                            // Log start time for debugging
+                            $startTime = microtime(true);
+                            
+                            $imagePaths = ImageService::processImage($file, 'fotos', 1920, 85);
+                            $path = $imagePaths['original'];
+                            $thumbnailPath = $imagePaths['thumbnail'];
+                            
+                            // Log processing time
+                            $processingTime = microtime(true) - $startTime;
+                            \Log::info("Image processed in {$processingTime}s", [
+                                'file_size' => $file->getSize(),
+                                'path' => $path,
+                                'index' => $index
+                            ]);
+                            
+                            // Ensure file permissions are correct
+                            if ($thumbnailPath && Storage::disk('public')->exists($thumbnailPath)) {
+                                chmod(Storage::disk('public')->path($thumbnailPath), 0644);
+                            }
+                            if (Storage::disk('public')->exists($path)) {
+                                chmod(Storage::disk('public')->path($path), 0644);
+                            }
+                        } catch (\Exception $e) {
+                            // Log error for debugging
+                            \Log::error('Image processing failed', [
+                                'error' => $e->getMessage(),
+                                'file_size' => $file->getSize(),
+                                'index' => $index,
+                                'trace' => $e->getTraceAsString()
+                            ]);
+                            
+                            // Fallback to regular upload if image processing fails
+                            $path = $file->store('fotos', 'public');
+                            // Ensure file permissions are correct
+                            if (Storage::disk('public')->exists($path)) {
+                                chmod(Storage::disk('public')->path($path), 0644);
+                            }
+                            $thumbnailPath = null;
+                        }
+                        
+                        // Check if file was stored successfully
+                        if (!$path) {
+                            $errors[] = "File #{$index}: Gagal menyimpan file foto.";
+                            continue;
+                        }
+                        
+                        // Create foto record
+                        $foto = Foto::create([
+                            'galery_id' => $galery ? $galery->id : null,
+                            'kategori_id' => $kategoriId,
+                            'judul' => $judul,
+                            'file' => $path,
+                            'batch_id' => $batchId,
+                            'thumbnail' => $thumbnailPath,
+                        ]);
+                        
+                        $created[] = $foto->load('kategori');
+                    } catch (\Exception $e) {
+                        \Log::error('File upload failed', [
+                            'error' => $e->getMessage(),
+                            'index' => $index,
+                            'file_name' => $file->getClientOriginalName()
+                        ]);
+                        $errors[] = "File #{$index}: " . $e->getMessage();
+                    }
+                }
+                
+                // Return response for multiple uploads
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => count($created) > 0,
+                        'message' => count($created) . ' foto berhasil diupload' . (count($errors) > 0 ? ', ' . count($errors) . ' gagal' : ''),
+                        'data' => $created,
+                        'errors' => $errors,
+                        'total' => count($files),
+                        'success_count' => count($created),
+                        'error_count' => count($errors)
+                    ])->header('Content-Type', 'application/json');
+                }
+                
+                if (count($created) > 0) {
+                    return redirect()->route('admin.fotos')->with('success', count($created) . ' foto berhasil diupload' . (count($errors) > 0 ? ', ' . count($errors) . ' gagal' : ''));
+                } else {
+                    return redirect()->back()->with('error', 'Gagal upload semua foto: ' . implode(', ', $errors));
+                }
+            }
+            
+            // Handle single file (backward compatibility)
             if (!$request->hasFile('file')) {
                 if ($isAjax) {
                     return response()->json([
@@ -215,11 +342,21 @@ class FotoController extends Controller
                 return redirect()->back()->with('error', 'Gagal upload.');
             }
 
-            // Process and compress image
+            // Process and compress image with timeout protection
             try {
+                // Log start time for debugging
+                $startTime = microtime(true);
+                
                 $imagePaths = ImageService::processImage($file, 'fotos', 1920, 85);
                 $path = $imagePaths['original'];
                 $thumbnailPath = $imagePaths['thumbnail'];
+                
+                // Log processing time
+                $processingTime = microtime(true) - $startTime;
+                \Log::info("Image processed in {$processingTime}s", [
+                    'file_size' => $file->getSize(),
+                    'path' => $path
+                ]);
                 
                 // Ensure file permissions are correct
                 if ($thumbnailPath && Storage::disk('public')->exists($thumbnailPath)) {
@@ -229,6 +366,13 @@ class FotoController extends Controller
                     chmod(Storage::disk('public')->path($path), 0644);
                 }
             } catch (\Exception $e) {
+                // Log error for debugging
+                \Log::error('Image processing failed', [
+                    'error' => $e->getMessage(),
+                    'file_size' => $file->getSize(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
                 // Fallback to regular upload if image processing fails
                 $path = $file->store('fotos', 'public');
                 // Ensure file permissions are correct
@@ -248,15 +392,12 @@ class FotoController extends Controller
                 }
                 return redirect()->back()->with('error', 'Gagal upload.');
             }
-
-            // Use batch_id from request if provided (for bulk upload grouping)
-            $batchId = $validated['batch_id'] ?? null;
             
             // Create foto record with full path for consistency
             $foto = Foto::create([
                 'galery_id' => $galery ? $galery->id : null, // Allow null for standalone photos
-                'kategori_id' => $validated['kategori_id'],
-                'judul' => $validated['judul'] ?? null,
+                'kategori_id' => $kategoriId,
+                'judul' => $judul,
                 'file' => $path, // Store full path for consistency
                 'batch_id' => $batchId, // Group photos uploaded together
                 'thumbnail' => $thumbnailPath, // Store thumbnail path
@@ -288,19 +429,39 @@ class FotoController extends Controller
             }
             return redirect()->back()->with('error', 'Gagal upload.')->withInput();
         } catch (\Exception $e) {
+            // Log full error for debugging
+            \Log::error('Foto upload failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'request_size' => $request->header('Content-Length'),
+                'has_file' => $request->hasFile('file'),
+                'file_size' => $request->hasFile('file') ? $request->file('file')->getSize() : null,
+            ]);
+            
             $isAjax = request()->expectsJson() || 
                      request()->ajax() || 
                      request()->wantsJson() ||
                      request()->header('X-Requested-With') === 'XMLHttpRequest' ||
                      request()->header('Accept') === 'application/json';
             
+            // Check if it's a timeout or memory issue
+            $errorMessage = 'Terjadi kesalahan saat upload foto.';
+            if (str_contains($e->getMessage(), 'timeout') || str_contains($e->getMessage(), 'Maximum execution time')) {
+                $errorMessage = 'Upload timeout. File terlalu besar atau server terlalu sibuk. Coba lagi dengan file yang lebih kecil.';
+            } elseif (str_contains($e->getMessage(), 'memory') || str_contains($e->getMessage(), 'Memory')) {
+                $errorMessage = 'File terlalu besar. Maksimal 5MB.';
+            }
+            
             if ($isAjax) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                    'message' => $errorMessage,
+                    'error' => config('app.debug') ? $e->getMessage() : null
                 ], 500)->header('Content-Type', 'application/json');
             }
-            return redirect()->back()->with('error', 'Gagal upload.');
+            return redirect()->back()->with('error', $errorMessage);
         }
     }
 

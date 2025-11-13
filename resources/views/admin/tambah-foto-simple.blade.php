@@ -75,21 +75,23 @@
             </div>
             
             <div class="mb-3">
-                <label for="file" class="form-label">
+                <label for="files" class="form-label">
                     <i class="fas fa-images me-2"></i>
                     Pilih Foto <span class="text-danger">*</span>
                 </label>
                 <input type="file" 
                        class="form-control" 
-                       id="file" 
-                       name="file" 
-                       accept="image/jpeg,image/jpg,image/png" 
+                       id="files" 
+                       name="files[]" 
+                       accept="image/jpeg,image/jpg,image/png,image/webp" 
+                       multiple
                        required>
-                <small class="form-text text-muted">Format: JPEG, JPG, PNG | Maks: 5MB per foto</small>
+                <small class="form-text text-muted">Format: JPEG, JPG, PNG, WEBP | Maks: 10MB per foto | Bisa upload multiple foto sekaligus</small>
                 <small class="form-text text-muted d-block mt-1">
                     <i class="fas fa-info-circle me-1"></i>
-                    Untuk upload multiple foto, gunakan form ini beberapa kali atau upload satu per satu.
+                    Pilih beberapa foto sekaligus dengan menahan <kbd>Ctrl</kbd> (Windows) atau <kbd>Cmd</kbd> (Mac) saat memilih file.
                 </small>
+                <div id="filePreview" class="mt-3"></div>
             </div>
 
             <div class="d-flex gap-2 mt-4">
@@ -105,5 +107,51 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('files');
+    const filePreview = document.getElementById('filePreview');
+    
+    fileInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        filePreview.innerHTML = '';
+        
+        if (files.length > 0) {
+            const previewContainer = document.createElement('div');
+            previewContainer.className = 'row g-2';
+            
+            Array.from(files).forEach((file, index) => {
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                const fileCard = document.createElement('div');
+                fileCard.className = 'col-md-3';
+                fileCard.innerHTML = `
+                    <div class="card border">
+                        <div class="card-body p-2">
+                            <small class="d-block text-truncate" title="${file.name}">
+                                <i class="fas fa-image me-1"></i>${file.name}
+                            </small>
+                            <small class="text-muted">${fileSize} MB</small>
+                        </div>
+                    </div>
+                `;
+                previewContainer.appendChild(fileCard);
+            });
+            
+            const infoCard = document.createElement('div');
+            infoCard.className = 'col-12 mt-2';
+            infoCard.innerHTML = `
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>${files.length}</strong> foto dipilih. Total: <strong>${(Array.from(files).reduce((sum, f) => sum + f.size, 0) / 1024 / 1024).toFixed(2)} MB</strong>
+                </div>
+            `;
+            previewContainer.appendChild(infoCard);
+            
+            filePreview.appendChild(previewContainer);
+        }
+    });
+});
+</script>
 @endsection
 
