@@ -95,46 +95,52 @@
                          data-title="{{ strtolower($foto->judul ?? '') }}" 
                          data-kategori="{{ $foto->kategori_id ?? '' }}" 
                          data-created="{{ $foto->created_at->timestamp }}">
-                        <div class="gallery-card h-100">
-                            <div class="gallery-image-wrapper">
+                        <div class="album-card h-100">
+                            <div class="album-thumbnail-wrapper">
                                 @php
                                     $imageUrl = '';
+                                    $thumbnailUrl = '';
+                                    if ($foto->thumbnail && Storage::disk('public')->exists($foto->thumbnail)) {
+                                        $thumbnailUrl = asset('storage/' . $foto->thumbnail);
+                                    }
                                     if (str_contains($foto->file, '/')) {
                                         $imageUrl = asset('storage/' . $foto->file);
                                     } else {
                                         $imageUrl = asset('storage/fotos/' . $foto->file);
                                     }
+                                    if (!$thumbnailUrl) {
+                                        $thumbnailUrl = $imageUrl;
+                                    }
                                 @endphp
-                                <div class="gallery-image-container">
-                                    <img src="{{ $imageUrl }}" 
-                                         alt="{{ $foto->judul ?? 'Foto Sekolah' }}"
-                                         class="gallery-image"
-                                         loading="lazy"
-                                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect fill=\'%232563eb\' width=\'400\' height=\'300\'/%3E%3Ctext fill=\'%23ffffff\' font-family=\'Arial\' font-size=\'16\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\'%3EGambar Tidak Ditemukan%3C/text%3E%3C/svg%3E';">
-                                    <div class="gallery-overlay">
-                                        <div class="gallery-overlay-content">
-                                            <div class="admin-actions-overlay">
-                                                <button class="btn btn-sm btn-light mb-2" 
-                                                        onclick="editFoto({{ $foto->id }}, '{{ addslashes($foto->judul ?? '') }}', {{ $foto->kategori_id ?? 'null' }})"
-                                                        title="Edit Foto">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                                                <button class="btn btn-sm btn-danger" 
-                                                        onclick="deleteFoto({{ $foto->id }})"
-                                                        title="Hapus Foto">
-                        <i class="fas fa-trash"></i> Hapus
-                    </button>
-                </div>
-            </div>
-        </div>
+                                <img src="{{ $thumbnailUrl }}" 
+                                     alt="{{ $foto->judul ?? 'Foto Sekolah' }}"
+                                     class="album-thumbnail"
+                                     loading="lazy"
+                                     data-src="{{ $imageUrl }}"
+                                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect fill=\'%232563eb\' width=\'400\' height=\'300\'/%3E%3Ctext fill=\'%23ffffff\' font-family=\'Arial\' font-size=\'16\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\'%3EGambar Tidak Ditemukan%3C/text%3E%3C/svg%3E';">
+                                <div class="album-overlay">
+                                    <div class="album-overlay-content">
+                                        <div class="admin-actions-overlay">
+                                            <button class="btn btn-sm btn-light mb-2" 
+                                                    onclick="editFoto({{ $foto->id }}, '{{ addslashes($foto->judul ?? '') }}', {{ $foto->kategori_id ?? 'null' }})"
+                                                    title="Edit Foto">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" 
+                                                    onclick="deleteFoto({{ $foto->id }})"
+                                                    title="Hapus Foto">
+                                                <i class="fas fa-trash"></i> Hapus
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="gallery-card-body">
-                                <h5 class="gallery-card-title">{{ $foto->judul ?? 'Foto Sekolah' }}</h5>
+                            <div class="album-card-body">
+                                <h5 class="album-title">{{ $foto->judul ?? 'Foto Sekolah' }}</h5>
                                 @if($foto->kategori)
                                     <span class="badge bg-primary mb-2">{{ $foto->kategori->judul }}</span>
                                 @endif
-                                <p class="gallery-card-date text-muted mb-0">
+                                <p class="album-date text-muted mb-0">
                                     <i class="far fa-calendar-alt me-1"></i>
                                     {{ $foto->created_at->format('d M Y') }}
                                 </p>
@@ -142,16 +148,18 @@
                         </div>
                     </div>
                 @endforeach
-</div>
+            </div>
 
 <!-- Pagination -->
 @if($fotos->hasPages())
-                <div class="row mt-5">
-                    <div class="col-12 d-flex justify-content-center">
-        {{ $fotos->links() }}
+            <div class="row mt-5">
+                <div class="col-12 d-flex justify-content-center">
+                    <div class="simple-pagination">
+                        {{ $fotos->appends(request()->query())->links() }}
                     </div>
                 </div>
-            @endif
+            </div>
+        @endif
         @else
             <!-- Empty State -->
             <div class="text-center py-5">
@@ -291,24 +299,24 @@
     opacity: 0.3;
 }
 
-/* Gallery Card */
-.gallery-card {
+/* Album Card - Same as User Gallery */
+.album-card {
     background: white;
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
+    cursor: pointer;
     display: flex;
     flex-direction: column;
 }
 
-.gallery-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+.album-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
 }
 
-/* Gallery Image Wrapper */
-.gallery-image-wrapper {
+.album-thumbnail-wrapper {
     position: relative;
     width: 100%;
     padding-top: 75%; /* 4:3 Aspect Ratio */
@@ -316,29 +324,27 @@
     background: #f8f9fa;
 }
 
-.gallery-image-container {
+.album-thumbnail {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-.gallery-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
 }
 
-.gallery-overlay {
+.album-card:hover .album-thumbnail {
+    transform: scale(1.1);
+}
+
+.album-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(37, 99, 235, 0.9);
+    background: rgba(37, 99, 235, 0.85);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -346,7 +352,7 @@
     transition: opacity 0.3s ease;
 }
 
-.gallery-card:hover .gallery-overlay {
+.album-card:hover .album-overlay {
     opacity: 1;
 }
 
@@ -362,34 +368,83 @@
     font-weight: 600;
 }
 
-.gallery-card-body {
-    padding: 1rem;
+.album-card-body {
+    padding: 1.25rem;
     flex: 1;
     display: flex;
     flex-direction: column;
 }
 
-.gallery-card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #333;
+.album-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.75rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-height: 2.5rem;
+    min-height: 3rem;
 }
 
-.gallery-card-date {
+.album-date {
     font-size: 0.875rem;
     margin-top: auto;
+}
+
+.album-overlay-content {
+    color: white;
+    text-align: center;
 }
 
 /* Empty State */
 .empty-state-icon {
     opacity: 0.5;
+}
+
+/* Simple Pagination - Same as User Gallery */
+.simple-pagination {
+    width: 100%;
+    max-width: 400px;
+}
+
+.simple-pagination .pagination {
+    justify-content: center;
+    margin: 0;
+    gap: 0.3rem;
+    font-size: 0.875rem;
+}
+
+.simple-pagination .pagination .page-link {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+    background: white;
+    transition: all 0.15s ease;
+    text-align: center;
+    text-decoration: none;
+    position: relative;
+}
+
+.simple-pagination .pagination .page-link:hover {
+    background: #f3f4f6;
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.simple-pagination .pagination .page-item.active .page-link {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: white;
+    font-weight: 500;
+}
+
+.simple-pagination .pagination .page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* Loading Animation */

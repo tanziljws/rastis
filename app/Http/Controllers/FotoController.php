@@ -218,11 +218,23 @@ class FotoController extends Controller
             if ($isMultiple && $request->hasFile('files')) {
                 $files = $request->file('files');
                 
+                // Validate files array
+                if (!is_array($files)) {
+                    $files = [$files];
+                }
+                
                 foreach ($files as $index => $file) {
                     try {
+                        // Check if file exists
+                        if (!$file) {
+                            $errors[] = "File #{$index}: File tidak ditemukan";
+                            continue;
+                        }
+                        
                         // Check if file upload was successful
                         if (!$file->isValid()) {
-                            $errors[] = "File #{$index}: " . $file->getError();
+                            $errorMsg = $file->getError() ?: 'File tidak valid';
+                            $errors[] = "File #{$index}: " . $errorMsg;
                             continue;
                         }
                         
@@ -300,21 +312,42 @@ class FotoController extends Controller
                 
                 // Return response for multiple uploads
                 if ($isAjax) {
-                    return response()->json([
+                    $response = [
                         'success' => count($created) > 0,
                         'message' => count($created) . ' foto berhasil diupload' . (count($errors) > 0 ? ', ' . count($errors) . ' gagal' : ''),
                         'data' => $created,
-                        'errors' => $errors,
                         'total' => count($files),
                         'success_count' => count($created),
                         'error_count' => count($errors)
-                    ])->header('Content-Type', 'application/json');
+                    ];
+                    
+                    if (count($errors) > 0) {
+                        $response['errors'] = $errors;
+                    }
+                    
+                    $statusCode = count($created) > 0 ? 200 : 400;
+                    return response()->json($response, $statusCode)
+                        ->header('Content-Type', 'application/json')
+                        ->header('Access-Control-Allow-Origin', '*')
+                        ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+                        ->header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
                 }
                 
                 if (count($created) > 0) {
-                    return redirect()->route('admin.fotos')->with('success', count($created) . ' foto berhasil diupload' . (count($errors) > 0 ? ', ' . count($errors) . ' gagal' : ''));
+                    $message = count($created) . ' foto berhasil diupload';
+                    if (count($errors) > 0) {
+                        $message .= ', ' . count($errors) . ' gagal';
+                    }
+                    return redirect()->route('admin.fotos')->with('success', $message);
                 } else {
-                    return redirect()->back()->with('error', 'Gagal upload semua foto: ' . implode(', ', $errors));
+                    $errorMessage = 'Gagal upload semua foto.';
+                    if (count($errors) > 0) {
+                        $errorMessage .= ' ' . implode(', ', array_slice($errors, 0, 3));
+                        if (count($errors) > 3) {
+                            $errorMessage .= ' dan ' . (count($errors) - 3) . ' error lainnya.';
+                        }
+                    }
+                    return redirect()->back()->with('error', $errorMessage)->withInput();
                 }
             }
             
